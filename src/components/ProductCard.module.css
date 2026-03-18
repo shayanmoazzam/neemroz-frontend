@@ -1,0 +1,149 @@
+.card {
+  background: var(--white);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: transform .3s, box-shadow .3s;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.imgWrap {
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  background: var(--sand);
+}
+.imgWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .5s;
+}
+.card:hover .imgWrap img { transform: scale(1.06); }
+
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 50px;
+  letter-spacing: .05em;
+}
+.discount {
+  position: absolute;
+  top: 12px;
+  right: 44px;
+  background: var(--success);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 50px;
+}
+
+.wishBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(6px);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--earth);
+  transition: transform .2s, background .2s;
+}
+.wishBtn:hover { transform: scale(1.15); background: #fff; }
+.wished { color: #e53e3e; }
+
+.info { padding: 16px 14px 18px; }
+
+.colors {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 9px;
+}
+.dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: border-color .2s, transform .2s;
+}
+.dot:hover { transform: scale(1.15); }
+.activeDot { border-color: var(--deep); }
+
+.name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--deep);
+  margin-bottom: 4px;
+  cursor: pointer;
+  line-height: 1.3;
+}
+.name:hover { color: var(--accent); }
+
+.desc {
+  font-size: .75rem;
+  color: var(--earth);
+  margin-bottom: 8px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.rating span { font-size: .78rem; font-weight: 500; color: var(--ink); }
+.ratingCount { color: var(--earth); font-weight: 400; }
+
+.bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.priceWrap { display: flex; align-items: baseline; gap: 6px; }
+.price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--deep);
+}
+.oldPrice {
+  font-size: .82rem;
+  color: var(--clay);
+  text-decoration: line-through;
+}
+.addBtn {
+  background: var(--deep);
+  color: var(--cream);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: .78rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background .2s, transform .15s;
+}
+.addBtn:hover { background: var(--accent); transform: scale(1.05); }

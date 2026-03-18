@@ -1,0 +1,88 @@
+:root {
+  --cream: #FAF7F2;
+  --sand: #E8DDD0;
+  --clay: #C4A882;
+  --earth: #8B6A4A;
+  --deep: #3D2B1F;
+  --ink: #1A1008;
+  --accent: #C4622D;
+  --white: #FFFFFF;
+  --success: #2E7D52;
+  --shadow: 0 4px 32px rgba(61,43,31,.10);
+  --shadow-lg: 0 12px 48px rgba(61,43,31,.16);
+  --r: 16px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--sand); }
+::-webkit-scrollbar-thumb { background: var(--clay); border-radius: 3px; }
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
+img { display: block; }
+
+.btn-primary {
+  background: var(--deep);
+  color: var(--cream);
+  padding: 13px 32px;
+  border-radius: 50px;
+  font-size: .88rem;
+  font-weight: 500;
+  border: none;
+  transition: background .2s, transform .15s;
+  letter-spacing: .03em;
+}
+.btn-primary:hover { background: var(--accent); transform: translateY(-2px); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--deep);
+  padding: 12px 32px;
+  border-radius: 50px;
+  font-size: .88rem;
+  font-weight: 500;
+  border: 1.5px solid var(--deep);
+  transition: all .2s;
+}
+.btn-outline:hover { background: var(--deep); color: var(--cream); }
+
+.section-head { text-align: center; margin-bottom: 52px; }
+.section-eyebrow {
+  font-size: .72rem;
+  letter-spacing: .18em;
+  color: var(--earth);
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--deep);
+  font-weight: 300;
+  line-height: 1.2;
+}
+.section-title em { font-style: italic; color: var(--accent); }
+.divider {
+  width: 44px;
+  height: 2px;
+  background: var(--clay);
+  margin: 18px auto 0;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up   { animation: fadeUp .6s ease both; }
+.fade-up-2 { animation: fadeUp .6s .12s ease both; }
+.fade-up-3 { animation: fadeUp .6s .24s ease both; }
