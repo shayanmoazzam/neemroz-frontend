@@ -246,3 +246,67 @@
   .whyGrid { grid-template-columns: 1fr 1fr; }
   .productGrid { grid-template-columns: repeat(2,1fr); gap: 14px; }
 }
+
+.comingSoon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 50px;
+  letter-spacing: .05em;
+}
+
+.comingSoonBanner {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--white);
+  border-radius: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: var(--shadow);
+}
+.comingSoonIcon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+.comingSoonBanner h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  color: var(--deep);
+  margin-bottom: 12px;
+  font-weight: 300;
+}
+.comingSoonBanner p {
+  font-size: .9rem;
+  color: var(--earth);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.notifyForm {
+  display: flex;
+  gap: 10px;
+  max-width: 420px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.notifyInput {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 18px;
+  border: 1.5px solid var(--sand);
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .88rem;
+  outline: none;
+  transition: border-color .2s;
+  background: var(--cream);
+}
+.notifyInput:focus { border-color: var(--clay); }

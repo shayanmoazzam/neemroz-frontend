@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, Search, X } from 'lucide-react'
 import api from '../api'
@@ -7,10 +7,9 @@ import styles from './Shop.module.css'
 
 const CATEGORIES = [
   { key: 'all',       label: 'All Products' },
-  { key: 'bedsheets', label: 'Bedsheets' },
-  { key: 'pillow',    label: 'Pillow Covers' },
-  { key: 'bedset',    label: 'Bed Sets' },
-  { key: 'duvet',     label: 'Duvet Covers' },
+  { key: 'bedsheet',  label: 'Bedsheet' },
+  { key: 'women',     label: 'Women Wear' },
+  { key: 'men',       label: 'Men Wear' },
 ]
 
 const SORT_OPTIONS = [
@@ -42,25 +41,17 @@ export default function Shop() {
 
   useEffect(() => {
     let result = [...products]
-
-    if (category !== 'all') {
-      result = result.filter(p => p.category === category)
-    }
-
+    if (category !== 'all') result = result.filter(p => p.category === category)
     if (search) {
       const q = search.toLowerCase()
       result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q)
+        p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
       )
     }
-
     result = result.filter(p => p.price <= priceMax)
-
     if (sort === 'price_asc')  result.sort((a, b) => a.price - b.price)
     if (sort === 'price_desc') result.sort((a, b) => b.price - a.price)
     if (sort === 'rating')     result.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-
     setFiltered(result)
   }, [products, category, search, sort, priceMax])
 
@@ -72,45 +63,34 @@ export default function Shop() {
     setSearchParams(params)
   }
 
+  const getCategoryTitle = () => {
+    if (search) return `Results for "${search}"`
+    if (category === 'all') return 'All Products'
+    return CATEGORIES.find(c => c.key === category)?.label || 'Products'
+  }
+
   return (
     <div className={styles.page}>
-      {/* Page header */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>
-            {search ? `Results for "${search}"` :
-             category !== 'all' ? CATEGORIES.find(c => c.key === category)?.label : 'All Products'}
-          </h1>
+          <h1 className={styles.title}>{getCategoryTitle()}</h1>
           <p className={styles.subtitle}>{filtered.length} products found</p>
         </div>
         <div className={styles.headerRight}>
-          <select
-            className={styles.sortSelect}
-            value={sort}
-            onChange={e => setSort(e.target.value)}
-          >
-            {SORT_OPTIONS.map(o => (
-              <option key={o.key} value={o.key}>{o.label}</option>
-            ))}
+          <select className={styles.sortSelect} value={sort} onChange={e => setSort(e.target.value)}>
+            {SORT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
           </select>
-          <button
-            className={styles.filterToggle}
-            onClick={() => setShowFilters(s => !s)}
-          >
-            <SlidersHorizontal size={16} />
-            Filters
+          <button className={styles.filterToggle} onClick={() => setShowFilters(s => !s)}>
+            <SlidersHorizontal size={16} />Filters
           </button>
         </div>
       </div>
 
       <div className={styles.body}>
-        {/* Sidebar filters */}
         <aside className={`${styles.sidebar} ${showFilters ? styles.sidebarOpen : ''}`}>
           <div className={styles.sidebarHead}>
             <span>Filters</span>
-            <button onClick={() => setShowFilters(false)} className={styles.closeSidebar}>
-              <X size={18} />
-            </button>
+            <button onClick={() => setShowFilters(false)} className={styles.closeSidebar}><X size={18} /></button>
           </div>
 
           <div className={styles.filterGroup}>
@@ -128,30 +108,17 @@ export default function Shop() {
 
           <div className={styles.filterGroup}>
             <div className={styles.filterLabel}>Max Price: ₹{priceMax.toLocaleString('en-IN')}</div>
-            <input
-              type="range"
-              min={299}
-              max={10000}
-              step={100}
-              value={priceMax}
-              onChange={e => setPriceMax(Number(e.target.value))}
-              className={styles.rangeInput}
-            />
-            <div className={styles.rangeLabels}>
-              <span>₹299</span>
-              <span>₹10,000</span>
-            </div>
+            <input type="range" min={299} max={10000} step={100} value={priceMax}
+              onChange={e => setPriceMax(Number(e.target.value))} className={styles.rangeInput}/>
+            <div className={styles.rangeLabels}><span>₹299</span><span>₹10,000</span></div>
           </div>
 
-          <button
-            className={styles.resetBtn}
-            onClick={() => { setSort('default'); setPriceMax(10000); setCategory('all') }}
-          >
+          <button className={styles.resetBtn}
+            onClick={() => { setSort('default'); setPriceMax(10000); setCategory('all') }}>
             Reset All Filters
           </button>
         </aside>
 
-        {/* Products */}
         <main className={styles.main}>
           {loading ? (
             <div className={styles.loading}>Loading products...</div>

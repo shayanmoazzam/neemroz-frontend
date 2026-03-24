@@ -230,3 +230,28 @@
   .mobileMenu { display: flex; }
   .cartBtn span:not(.badge) { display: none; }
 }
+
+.comingSoonLink {
+  font-size: .85rem;
+  color: var(--clay);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: default;
+}
+.soonTag {
+  background: var(--accent);
+  color: #fff;
+  font-size: .6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 50px;
+  letter-spacing: .04em;
+}
+.mobileComingSoon {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--sand);
+  font-size: .9rem;
+  color: var(--clay);
+  font-style: italic;
+}

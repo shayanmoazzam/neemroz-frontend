@@ -32,27 +32,28 @@ export default function Navbar() {
   return (
     <>
       <div className={styles.topbar}>
-        🚚 Free shipping above ₹799 &nbsp;|&nbsp; 100% Pure Cotton &nbsp;|&nbsp; 30-Day Returns
+        🚚 Free shipping above ₹799 &nbsp;|&nbsp; Premium Quality &nbsp;|&nbsp; 30-Day Returns
       </div>
 
       <nav className={styles.nav}>
-        <Link to="/" className={styles.logo}>Neem<span>roz</span></Link>
+        <Link to="/" className={styles.logo}>Ayezu <span>Collection</span></Link>
 
         <ul className={styles.links}>
-          <li><Link to="/shop">Shop</Link></li>
-          <li><Link to="/shop?category=bedsheets">Bedsheets</Link></li>
-          <li><Link to="/shop?category=pillow">Pillows</Link></li>
-          <li><Link to="/shop?category=bedset">Bed Sets</Link></li>
-          <li><Link to="/shop?category=duvet">Duvets</Link></li>
+          <li><Link to="/shop?category=bedsheet">Bedsheet</Link></li>
+          <li>
+            <span className={styles.comingSoonLink}>Women Wear <span className={styles.soonTag}>Soon</span></span>
+          </li>
+          <li>
+            <span className={styles.comingSoonLink}>Men Wear <span className={styles.soonTag}>Soon</span></span>
+          </li>
+          <li><Link to="/shop">All Products</Link></li>
         </ul>
 
         <div className={styles.actions}>
-          {/* Search */}
           <button className={styles.iconBtn} onClick={() => setSearchOpen(s => !s)}>
             <Search size={19} />
           </button>
 
-          {/* Auth */}
           {user ? (
             <div className={styles.userDrop}>
               <button className={styles.iconBtn} onClick={() => setDropOpen(d => !d)}>
@@ -79,21 +80,18 @@ export default function Navbar() {
             </Link>
           )}
 
-          {/* Cart */}
           <button className={styles.cartBtn} onClick={() => setCartOpen(true)}>
             <ShoppingCart size={17} />
             Cart
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
 
-          {/* Mobile menu */}
           <button className={styles.menuBtn} onClick={() => setMenuOpen(m => !m)}>
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </nav>
 
-      {/* Search bar */}
       {searchOpen && (
         <div className={styles.searchBar}>
           <form onSubmit={handleSearch} className={styles.searchForm}>
@@ -101,7 +99,7 @@ export default function Navbar() {
               autoFocus
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
-              placeholder="Search bedsheets, pillow covers, duvet..."
+              placeholder="Search bedsheets, collections..."
               className={styles.searchInput}
             />
             <button type="submit" className={styles.searchSubmit}>Search</button>
@@ -112,14 +110,12 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Mobile menu */}
       {menuOpen && (
         <div className={styles.mobileMenu}>
+          <Link to="/shop?category=bedsheet" onClick={() => setMenuOpen(false)}>Bedsheet</Link>
+          <span className={styles.mobileComingSoon}>Women Wear — Coming Soon</span>
+          <span className={styles.mobileComingSoon}>Men Wear — Coming Soon</span>
           <Link to="/shop" onClick={() => setMenuOpen(false)}>All Products</Link>
-          <Link to="/shop?category=bedsheets" onClick={() => setMenuOpen(false)}>Bedsheets</Link>
-          <Link to="/shop?category=pillow" onClick={() => setMenuOpen(false)}>Pillow Covers</Link>
-          <Link to="/shop?category=bedset" onClick={() => setMenuOpen(false)}>Bed Sets</Link>
-          <Link to="/shop?category=duvet" onClick={() => setMenuOpen(false)}>Duvet Covers</Link>
           {user ? (
             <>
               <Link to="/orders" onClick={() => setMenuOpen(false)}>My Orders</Link>

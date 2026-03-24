@@ -6,28 +6,26 @@ import ProductCard from '../components/ProductCard'
 import styles from './Home.module.css'
 
 const CATEGORIES = [
-  { key: 'bedsheets', label: 'Bedsheets', count: '48 Products',
+  { key: 'bedsheet',  label: 'Bedsheet',   desc: 'Premium Embroidered Collections',
     img: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80' },
-  { key: 'pillow',    label: 'Pillow Covers', count: '36 Products',
-    img: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=600&q=80' },
-  { key: 'bedset',    label: 'Bed Sets', count: '24 Products',
-    img: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&q=80' },
-  { key: 'duvet',     label: 'Duvet Covers', count: '18 Products',
-    img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=80' },
+  { key: 'women',     label: 'Women Wear', desc: 'Kurtas, Suits & More',
+    img: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=600&q=80' },
+  { key: 'men',       label: 'Men Wear',   desc: 'Shirts, Trousers & More',
+    img: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=600&q=80' },
 ]
 
 const WHY = [
-  { icon: <Leaf size={28}/>,      title: '100% Pure Cotton',  text: 'Every thread carefully sourced — breathable, soft, and skin-friendly for all seasons.' },
-  { icon: <Star size={28}/>,      title: '200+ Designs',      text: 'From classic whites to vibrant prints — something for every bedroom aesthetic.' },
-  { icon: <Truck size={28}/>,     title: 'Fast Delivery',     text: 'Free shipping above ₹799. Express delivery across India within 2–4 days.' },
-  { icon: <RefreshCw size={28}/>, title: '30-Day Returns',    text: 'Not satisfied? Return within 30 days, no questions asked.' },
-  { icon: <Shield size={28}/>,    title: 'Secure Payments',   text: 'Razorpay-powered 100% secure checkout. UPI, cards, and COD accepted.' },
+  { icon: <Leaf size={28}/>,      title: '100% Pure Cotton',   text: 'Every thread carefully sourced — breathable, soft, and skin-friendly for all seasons.' },
+  { icon: <Star size={28}/>,      title: 'Premium Quality',    text: 'From bedsheets to clothing — every product crafted with care and attention to detail.' },
+  { icon: <Truck size={28}/>,     title: 'Fast Delivery',      text: 'Free shipping above ₹799. Express delivery across India within 2–4 days.' },
+  { icon: <RefreshCw size={28}/>, title: '30-Day Returns',     text: 'Not satisfied? Return within 30 days, no questions asked.' },
+  { icon: <Shield size={28}/>,    title: 'Secure Payments',    text: 'Razorpay-powered 100% secure checkout. UPI, cards, and COD accepted.' },
 ]
 
 const REVIEWS = [
-  { name: 'Priya Sharma',    loc: 'Mumbai',    stars: 5, text: "Absolutely love the quality! The cotton is so soft and colours didn't fade after many washes." },
-  { name: 'Rahul Verma',     loc: 'Pune',      stars: 5, text: "Ordered the complete bed set and it transformed our bedroom. Delivery was super fast!" },
-  { name: 'Anjali Mehta',    loc: 'Bangalore', stars: 4, text: "Great value for money and the designs are always fresh. Neemroz is my go-to for home linen!" },
+  { name: 'Priya Sharma',  loc: 'Mumbai',    stars: 5, text: "Absolutely love the quality! The embroidery is stunning and the fabric is so soft. Will order again!" },
+  { name: 'Rahul Verma',   loc: 'Pune',      stars: 5, text: "Ordered the crimson bed set and it transformed our bedroom completely. Delivery was super fast!" },
+  { name: 'Anjali Mehta',  loc: 'Bangalore', stars: 4, text: "Ayezu Collection is my go-to for home linen. Great value and the designs are always fresh!" },
 ]
 
 export default function Home() {
@@ -36,7 +34,7 @@ export default function Home() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/products').then(r => setProducts(r.data)).finally(() => setLoading(false))
+    api.get('/products').then(r => setProducts(Array.isArray(r.data) ? r.data : [])).catch(() => setProducts([])).finally(() => setLoading(false))
   }, [])
 
   return (
@@ -44,19 +42,19 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className={styles.hero}>
         <div className={styles.heroLeft}>
-          <div className={`${styles.eyebrow} fade-up`}>Premium Home Linen Since 2018</div>
+          <div className={`${styles.eyebrow} fade-up`}>Premium Collection Since 2020</div>
           <h1 className={`${styles.h1} fade-up-2`}>
-            Where Every <em>Night</em><br/>Feels Like Luxury
+            Style That Speaks,<br/><em>Quality That Lasts</em>
           </h1>
           <p className={`${styles.heroSub} fade-up-3`}>
-            Crafted from 100% pure cotton — our bedsheets and pillow covers bring
-            softness, colour, and joy to your bedroom.
+            Discover our exclusive range of premium bedsheets, women wear and men wear —
+            crafted with love and delivered to your doorstep.
           </p>
           <div className={`${styles.heroBtns} fade-up-3`}>
             <button className="btn-primary" onClick={() => navigate('/shop')}>
               Shop Now
             </button>
-            <button className="btn-outline" onClick={() => navigate('/shop')}>
+            <button className="btn-outline" onClick={() => document.getElementById('categories').scrollIntoView({behavior:'smooth'})}>
               Explore Collections
             </button>
           </div>
@@ -65,25 +63,25 @@ export default function Home() {
           <div className={styles.imgGrid}>
             {[
               'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80',
-              'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=500&q=80',
-              'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&q=80',
+              'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=500&q=80',
+              'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=500&q=80',
               'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=500&q=80',
             ].map((src, i) => (
               <div key={i} className={styles.imgCell}>
-                <img src={src} alt="bedroom" loading="lazy" />
+                <img src={src} alt="collection" loading="lazy" />
               </div>
             ))}
           </div>
           <div className={styles.heroBadge}>
             <strong>4.8 ★</strong>
-            Trusted by 12,000+ families
+            Trusted by 5,000+ families
           </div>
         </div>
       </section>
 
       {/* ── STATS ── */}
       <div className={styles.stats}>
-        {[['12K+','Happy Customers'],['200+','Designs'],['100%','Pure Cotton'],['4.8★','Avg. Rating']].map(
+        {[['5K+','Happy Customers'],['500+','Products'],['100%','Pure Cotton'],['4.8★','Avg. Rating']].map(
           ([num, label]) => (
             <div key={label} className={styles.stat}>
               <div className={styles.statNum}>{num}</div>
@@ -94,10 +92,10 @@ export default function Home() {
       </div>
 
       {/* ── CATEGORIES ── */}
-      <section className={styles.section}>
+      <section className={styles.section} id="categories">
         <div className="section-head">
           <div className="section-eyebrow">Browse by Category</div>
-          <h2 className="section-title">Find Your <em>Perfect</em> Collection</h2>
+          <h2 className="section-title">Our <em>Collections</em></h2>
           <div className="divider" />
         </div>
         <div className={styles.catGrid}>
@@ -111,9 +109,12 @@ export default function Home() {
               <div className={styles.catOverlay} />
               <div className={styles.catInfo}>
                 <div className={styles.catName}>{cat.label}</div>
-                <div className={styles.catCount}>{cat.count}</div>
+                <div className={styles.catCount}>{cat.desc}</div>
                 <button className={styles.catBtn}>Shop Now →</button>
               </div>
+              {cat.key === 'women' || cat.key === 'men' ? (
+                <div className={styles.comingSoon}>Coming Soon</div>
+              ) : null}
             </div>
           ))}
         </div>
@@ -122,8 +123,8 @@ export default function Home() {
       {/* ── PRODUCTS ── */}
       <section className={`${styles.section} ${styles.sectionWhite}`}>
         <div className="section-head">
-          <div className="section-eyebrow">Our Collection</div>
-          <h2 className="section-title">New <em>Arrivals</em></h2>
+          <div className="section-eyebrow">Home Living</div>
+          <h2 className="section-title">Featured <em>Bedsheets</em></h2>
           <div className="divider" />
         </div>
         {loading ? (
@@ -140,10 +141,46 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── WOMEN WEAR COMING SOON ── */}
+      <section className={`${styles.section} ${styles.sectionSand}`}>
+        <div className="section-head">
+          <div className="section-eyebrow">Coming Soon</div>
+          <h2 className="section-title">Women <em>Wear</em></h2>
+          <div className="divider" />
+        </div>
+        <div className={styles.comingSoonBanner}>
+          <div className={styles.comingSoonIcon}>👗</div>
+          <h3>New Collection Dropping Soon!</h3>
+          <p>Our exclusive women wear collection is being curated. Subscribe to get notified when it launches.</p>
+          <div className={styles.notifyForm}>
+            <input type="email" placeholder="Enter your email to get notified" className={styles.notifyInput}/>
+            <button className="btn-primary">Notify Me</button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MEN WEAR COMING SOON ── */}
+      <section className={`${styles.section} ${styles.sectionWhite}`}>
+        <div className="section-head">
+          <div className="section-eyebrow">Coming Soon</div>
+          <h2 className="section-title">Men <em>Wear</em></h2>
+          <div className="divider" />
+        </div>
+        <div className={styles.comingSoonBanner}>
+          <div className={styles.comingSoonIcon}>👔</div>
+          <h3>New Collection Dropping Soon!</h3>
+          <p>Our exclusive men wear collection is being curated. Subscribe to get notified when it launches.</p>
+          <div className={styles.notifyForm}>
+            <input type="email" placeholder="Enter your email to get notified" className={styles.notifyInput}/>
+            <button className="btn-primary">Notify Me</button>
+          </div>
+        </div>
+      </section>
+
       {/* ── WHY US ── */}
       <section className={`${styles.section} ${styles.sectionSand}`}>
         <div className="section-head">
-          <div className="section-eyebrow">Why Neemroz</div>
+          <div className="section-eyebrow">Why Ayezu Collection</div>
           <h2 className="section-title">Made with <em>Care</em></h2>
           <div className="divider" />
         </div>
