@@ -6,12 +6,12 @@ import ProductCard from '../components/ProductCard'
 import styles from './Home.module.css'
 
 const CATEGORIES = [
-  { key: 'bedsheet',  label: 'Bedsheet',   desc: 'Premium Embroidered Collections',
+  { key: 'bedsheet', label: 'Bed Sheets',  desc: 'Premium Embroidered Collections',
     img: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80' },
-  { key: 'women',     label: 'Women Wear', desc: 'Kurtas, Suits & More',
+  { key: 'kids',     label: 'Kids Wear',   desc: 'Kurtas, Gharara & More',
+    img: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=600&q=80' },
+  { key: 'women',    label: 'Women Wear',  desc: 'Gharara, Suits & More',
     img: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=600&q=80' },
-  { key: 'men',       label: 'Men Wear',   desc: 'Shirts, Trousers & More',
-    img: 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=600&q=80' },
 ]
 
 const WHY = [
@@ -37,6 +37,10 @@ export default function Home() {
     api.get('/products').then(r => setProducts(Array.isArray(r.data) ? r.data : [])).catch(() => setProducts([])).finally(() => setLoading(false))
   }, [])
 
+  const bedsheets = products.filter(p => p.category === 'bedsheet')
+  const kidsWear  = products.filter(p => p.category === 'kids')
+  const womenWear = products.filter(p => p.category === 'women')
+
   return (
     <div>
       {/* ── HERO ── */}
@@ -47,7 +51,7 @@ export default function Home() {
             Style That Speaks,<br/><em>Quality That Lasts</em>
           </h1>
           <p className={`${styles.heroSub} fade-up-3`}>
-            Discover our exclusive range of premium bedsheets, women wear and men wear —
+            Discover our exclusive range of premium bedsheets, kids wear and women wear —
             crafted with love and delivered to your doorstep.
           </p>
           <div className={`${styles.heroBtns} fade-up-3`}>
@@ -64,7 +68,7 @@ export default function Home() {
             {[
               'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80',
               'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=500&q=80',
-              'https://images.unsplash.com/photo-1516257984-b1b4d707412e?w=500&q=80',
+              'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500&q=80',
               'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=500&q=80',
             ].map((src, i) => (
               <div key={i} className={styles.imgCell}>
@@ -112,68 +116,71 @@ export default function Home() {
                 <div className={styles.catCount}>{cat.desc}</div>
                 <button className={styles.catBtn}>Shop Now →</button>
               </div>
-              {cat.key === 'women' || cat.key === 'men' ? (
-                <div className={styles.comingSoon}>Coming Soon</div>
-              ) : null}
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── PRODUCTS ── */}
+      {/* ── BEDSHEETS ── */}
       <section className={`${styles.section} ${styles.sectionWhite}`}>
         <div className="section-head">
           <div className="section-eyebrow">Home Living</div>
-          <h2 className="section-title">Featured <em>Bedsheets</em></h2>
+          <h2 className="section-title">Featured <em>Bed Sheets</em></h2>
           <div className="divider" />
         </div>
         {loading ? (
           <div className={styles.loader}>Loading products...</div>
         ) : (
           <div className={styles.productGrid}>
-            {products.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
+            {bedsheets.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
         <div style={{textAlign:'center', marginTop:'40px'}}>
-          <button className="btn-outline" onClick={() => navigate('/shop')}>
-            View All Products
+          <button className="btn-outline" onClick={() => navigate('/shop?category=bedsheet')}>
+            View All Bed Sheets
           </button>
         </div>
       </section>
 
-      {/* ── WOMEN WEAR COMING SOON ── */}
+      {/* ── KIDS WEAR ── */}
       <section className={`${styles.section} ${styles.sectionSand}`}>
         <div className="section-head">
-          <div className="section-eyebrow">Coming Soon</div>
-          <h2 className="section-title">Women <em>Wear</em></h2>
+          <div className="section-eyebrow">Little Ones</div>
+          <h2 className="section-title">Kids <em>Wear</em></h2>
           <div className="divider" />
         </div>
-        <div className={styles.comingSoonBanner}>
-          <div className={styles.comingSoonIcon}>👗</div>
-          <h3>New Collection Dropping Soon!</h3>
-          <p>Our exclusive women wear collection is being curated. Subscribe to get notified when it launches.</p>
-          <div className={styles.notifyForm}>
-            <input type="email" placeholder="Enter your email to get notified" className={styles.notifyInput}/>
-            <button className="btn-primary">Notify Me</button>
+        {loading ? (
+          <div className={styles.loader}>Loading products...</div>
+        ) : (
+          <div className={styles.productGrid}>
+            {kidsWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
           </div>
+        )}
+        <div style={{textAlign:'center', marginTop:'40px'}}>
+          <button className="btn-outline" onClick={() => navigate('/shop?category=kids')}>
+            View All Kids Wear
+          </button>
         </div>
       </section>
 
-      {/* ── MEN WEAR COMING SOON ── */}
+      {/* ── WOMEN WEAR ── */}
       <section className={`${styles.section} ${styles.sectionWhite}`}>
         <div className="section-head">
-          <div className="section-eyebrow">Coming Soon</div>
-          <h2 className="section-title">Men <em>Wear</em></h2>
+          <div className="section-eyebrow">For Her</div>
+          <h2 className="section-title">Women <em>Wear</em></h2>
           <div className="divider" />
         </div>
-        <div className={styles.comingSoonBanner}>
-          <div className={styles.comingSoonIcon}>👔</div>
-          <h3>New Collection Dropping Soon!</h3>
-          <p>Our exclusive men wear collection is being curated. Subscribe to get notified when it launches.</p>
-          <div className={styles.notifyForm}>
-            <input type="email" placeholder="Enter your email to get notified" className={styles.notifyInput}/>
-            <button className="btn-primary">Notify Me</button>
+        {loading ? (
+          <div className={styles.loader}>Loading products...</div>
+        ) : (
+          <div className={styles.productGrid}>
+            {womenWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
           </div>
+        )}
+        <div style={{textAlign:'center', marginTop:'40px'}}>
+          <button className="btn-outline" onClick={() => navigate('/shop?category=women')}>
+            View All Women Wear
+          </button>
         </div>
       </section>
 

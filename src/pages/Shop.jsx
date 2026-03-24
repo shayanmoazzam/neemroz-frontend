@@ -7,9 +7,9 @@ import styles from './Shop.module.css'
 
 const CATEGORIES = [
   { key: 'all',       label: 'All Products' },
-  { key: 'bedsheet',  label: 'Bedsheet' },
+  { key: 'bedsheet',  label: 'Bed Sheets' },
+  { key: 'kids',      label: 'Kids Wear' },
   { key: 'women',     label: 'Women Wear' },
-  { key: 'men',       label: 'Men Wear' },
 ]
 
 const SORT_OPTIONS = [
