@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ShoppingCart, User, Search, Menu, X,
-  LogOut, Heart, ChevronRight
+  LogOut, Heart, ChevronRight, Home,
+  Package, HelpCircle, Truck, RotateCcw, MapPin
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
@@ -11,19 +12,19 @@ import api from '../api'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
-  const { user, logout }       = useAuth()
+  const { user, logout }           = useAuth()
   const { cartCount, setCartOpen } = useCart()
-  const { wishlist }           = useWishlist()
-  const navigate               = useNavigate()
+  const { wishlist }               = useWishlist()
+  const navigate                   = useNavigate()
 
-  const [menuOpen, setMenuOpen]   = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQ, setSearchQ]     = useState('')
-  const [results, setResults]     = useState([])
-  const [searching, setSearching] = useState(false)
-  const [dropOpen, setDropOpen]   = useState(false)
-  const searchRef                 = useRef(null)
-  const debounceRef               = useRef(null)
+  const [menuOpen, setMenuOpen]       = useState(false)
+  const [searchOpen, setSearchOpen]   = useState(false)
+  const [searchQ, setSearchQ]         = useState('')
+  const [results, setResults]         = useState([])
+  const [searching, setSearching]     = useState(false)
+  const [dropOpen, setDropOpen]       = useState(false)
+  const searchRef                     = useRef(null)
+  const debounceRef                   = useRef(null)
 
   // Live search
   useEffect(() => {
@@ -38,18 +39,16 @@ export default function Navbar() {
     }, 300)
   }, [searchQ])
 
-  // Close dropdown on outside click
+  // Close search on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setResults([])
-      }
+      if (searchRef.current && !searchRef.current.contains(e.target)) setResults([])
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Lock body scroll when mobile menu open
+  // Lock body scroll when menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -59,23 +58,16 @@ export default function Navbar() {
     e.preventDefault()
     if (!searchQ.trim()) return
     navigate(`/shop?search=${encodeURIComponent(searchQ.trim())}`)
-    setSearchOpen(false)
-    setSearchQ('')
-    setResults([])
+    setSearchOpen(false); setSearchQ(''); setResults([])
   }
 
   const handleResultClick = (id) => {
     navigate(`/product/${id}`)
-    setSearchOpen(false)
-    setSearchQ('')
-    setResults([])
+    setSearchOpen(false); setSearchQ(''); setResults([])
   }
 
   const handleLogout = () => {
-    logout()
-    setDropOpen(false)
-    setMenuOpen(false)
-    navigate('/')
+    logout(); setDropOpen(false); setMenuOpen(false); navigate('/')
   }
 
   const closeMenu = () => setMenuOpen(false)
@@ -87,8 +79,20 @@ export default function Navbar() {
       </div>
 
       <nav className={styles.nav}>
-        <Link to="/" className={styles.logo}>Ayezu <span>Collection</span></Link>
 
+        {/* LEFT: Hamburger (mobile) + Logo */}
+        <div className={styles.navLeft}>
+          <button
+            className={styles.menuBtn}
+            onClick={() => setMenuOpen(m => !m)}
+            aria-label="Menu"
+          >
+            <Menu size={22} />
+          </button>
+          <Link to="/" className={styles.logo}>Ayezu <span>Collection</span></Link>
+        </div>
+
+        {/* CENTER: Desktop nav links */}
         <ul className={styles.links}>
           <li><Link to="/shop?category=bedsheet">Bed Sheets</Link></li>
           <li><Link to="/shop?category=kids">Kids Wear</Link></li>
@@ -96,10 +100,15 @@ export default function Navbar() {
           <li><Link to="/shop">All Products</Link></li>
         </ul>
 
+        {/* RIGHT: Icons + Cart */}
         <div className={styles.actions}>
 
           {/* Search */}
-          <button className={styles.iconBtn} onClick={() => { setSearchOpen(s => !s); setSearchQ(''); setResults([]) }} title="Search">
+          <button
+            className={styles.iconBtn}
+            onClick={() => { setSearchOpen(s => !s); setSearchQ(''); setResults([]) }}
+            title="Search"
+          >
             <Search size={19} />
           </button>
 
@@ -109,7 +118,7 @@ export default function Navbar() {
             {wishlist.length > 0 && <span className={styles.wishBadge}>{wishlist.length}</span>}
           </Link>
 
-          {/* User */}
+          {/* User dropdown (desktop only) */}
           {user ? (
             <div className={styles.userDrop}>
               <button className={styles.iconBtn} onClick={() => setDropOpen(d => !d)}>
@@ -121,16 +130,10 @@ export default function Navbar() {
                     <span>{user.firstName} {user.lastName}</span>
                     <small>{user.email}</small>
                   </div>
-                  <Link to="/orders" className={styles.dropItem} onClick={() => setDropOpen(false)}>
-                    🛍️ My Orders
-                  </Link>
-                  <Link to="/wishlist" className={styles.dropItem} onClick={() => setDropOpen(false)}>
-                    ❤️ Wishlist ({wishlist.length})
-                  </Link>
+                  <Link to="/orders"   className={styles.dropItem} onClick={() => setDropOpen(false)}>📦 My Orders</Link>
+                  <Link to="/wishlist" className={styles.dropItem} onClick={() => setDropOpen(false)}>❤️ Wishlist ({wishlist.length})</Link>
                   {user.role === 'admin' && (
-                    <Link to="/admin" className={styles.dropItem} onClick={() => setDropOpen(false)}>
-                      ⚙️ Admin Panel
-                    </Link>
+                    <Link to="/admin" className={styles.dropItem} onClick={() => setDropOpen(false)}>⚙️ Admin Panel</Link>
                   )}
                   <button className={styles.dropItem} onClick={handleLogout}>
                     <LogOut size={14} /> Logout
@@ -150,15 +153,10 @@ export default function Navbar() {
             <span className={styles.cartLabel}>Cart</span>
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
-
-          {/* Hamburger */}
-          <button className={styles.menuBtn} onClick={() => setMenuOpen(m => !m)} aria-label="Menu">
-            <Menu size={22} />
-          </button>
         </div>
       </nav>
 
-      {/* ── SEARCH BAR WITH LIVE RESULTS ── */}
+      {/* ── SEARCH BAR ── */}
       {searchOpen && (
         <div className={styles.searchBar} ref={searchRef}>
           <form onSubmit={handleSearch} className={styles.searchForm}>
@@ -172,18 +170,20 @@ export default function Navbar() {
                 className={styles.searchInput}
               />
               {searchQ && (
-                <button type="button" className={styles.clearBtn} onClick={() => { setSearchQ(''); setResults([]) }}>
+                <button type="button" className={styles.clearBtn}
+                  onClick={() => { setSearchQ(''); setResults([]) }}>
                   <X size={14} />
                 </button>
               )}
             </div>
             <button type="submit" className={styles.searchSubmit}>Search</button>
-            <button type="button" onClick={() => { setSearchOpen(false); setSearchQ(''); setResults([]) }} className={styles.searchClose}>
+            <button type="button"
+              onClick={() => { setSearchOpen(false); setSearchQ(''); setResults([]) }}
+              className={styles.searchClose}>
               <X size={18} />
             </button>
           </form>
 
-          {/* Live Results Dropdown */}
           {(results.length > 0 || searching) && (
             <div className={styles.searchResults}>
               {searching && <div className={styles.searchLoading}>Searching...</div>}
@@ -213,17 +213,22 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* ── MOBILE MENU OVERLAY ── */}
+      {/* ── OVERLAY ── */}
       {menuOpen && <div className={styles.menuOverlay} onClick={closeMenu} />}
 
-      {/* ── MOBILE DRAWER ── */}
+      {/* ── LEFT DRAWER ── */}
       <div className={`${styles.mobileDrawer} ${menuOpen ? styles.drawerOpen : ''}`}>
+
+        {/* Header */}
         <div className={styles.drawerHeader}>
+          <button className={styles.drawerClose} onClick={closeMenu}>
+            <X size={20} />
+          </button>
           <span className={styles.drawerLogo}>Ayezu <span>Collection</span></span>
-          <button className={styles.drawerClose} onClick={closeMenu}><X size={22} /></button>
         </div>
 
-        {user && (
+        {/* User info */}
+        {user ? (
           <div className={styles.drawerUser}>
             <div className={styles.drawerAvatar}>{user.firstName?.[0]}</div>
             <div>
@@ -231,53 +236,82 @@ export default function Navbar() {
               <div className={styles.drawerEmail}>{user.email}</div>
             </div>
           </div>
+        ) : (
+          <div className={styles.drawerGuestBtns}>
+            <Link to="/login"    className={styles.drawerGuestBtn} onClick={closeMenu}>Login</Link>
+            <Link to="/register" className={styles.drawerGuestBtnOutline} onClick={closeMenu}>Register</Link>
+          </div>
         )}
 
+        {/* SHOP section */}
         <div className={styles.drawerSection}>
-          <div className={styles.drawerSectionTitle}>Shop</div>
-          <Link to="/shop?category=bedsheet" className={styles.drawerLink} onClick={closeMenu}>🛏️ Bed Sheets</Link>
-          <Link to="/shop?category=kids"     className={styles.drawerLink} onClick={closeMenu}>👗 Kids Wear</Link>
-          <Link to="/shop?category=women"    className={styles.drawerLink} onClick={closeMenu}>✨ Women Wear</Link>
-          <Link to="/shop"                   className={styles.drawerLink} onClick={closeMenu}>🛍️ All Products</Link>
+          <div className={styles.drawerSectionTitle}>🛍️ Shop</div>
+          <Link to="/"                       className={styles.drawerLink} onClick={closeMenu}>
+            <span>🏠 Home</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/shop?category=bedsheet" className={styles.drawerLink} onClick={closeMenu}>
+            <span>🛏️ Bed Sheets</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/shop?category=kids"     className={styles.drawerLink} onClick={closeMenu}>
+            <span>👗 Kids Wear</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/shop?category=women"    className={styles.drawerLink} onClick={closeMenu}>
+            <span>✨ Women Wear</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/shop"                   className={styles.drawerLink} onClick={closeMenu}>
+            <span>🏪 All Products</span><ChevronRight size={15}/>
+          </Link>
         </div>
 
-        <div className={styles.drawerSection}>
-          <div className={styles.drawerSectionTitle}>Account</div>
-          {user ? (
-            <>
-              <Link to="/orders"  className={styles.drawerLink} onClick={closeMenu}>📦 My Orders</Link>
-              <Link to="/wishlist" className={styles.drawerLink} onClick={closeMenu}>
-                ❤️ Wishlist {wishlist.length > 0 && <span className={styles.drawerBadge}>{wishlist.length}</span>}
+        {/* ACCOUNT section */}
+        {user && (
+          <div className={styles.drawerSection}>
+            <div className={styles.drawerSectionTitle}>👤 Account</div>
+            <Link to="/orders"   className={styles.drawerLink} onClick={closeMenu}>
+              <span>📦 My Orders</span><ChevronRight size={15}/>
+            </Link>
+            <Link to="/wishlist" className={styles.drawerLink} onClick={closeMenu}>
+              <span>❤️ Wishlist {wishlist.length > 0 && <span className={styles.drawerBadge}>{wishlist.length}</span>}</span>
+              <ChevronRight size={15}/>
+            </Link>
+            {user.role === 'admin' && (
+              <Link to="/admin"  className={styles.drawerLink} onClick={closeMenu}>
+                <span>⚙️ Admin Panel</span><ChevronRight size={15}/>
               </Link>
-              {user.role === 'admin' && (
-                <Link to="/admin" className={styles.drawerLink} onClick={closeMenu}>⚙️ Admin Panel</Link>
-              )}
-              <button className={styles.drawerLogout} onClick={handleLogout}>
-                <LogOut size={15} /> Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login"    className={styles.drawerLink} onClick={closeMenu}>🔑 Login</Link>
-              <Link to="/register" className={styles.drawerLink} onClick={closeMenu}>📝 Register</Link>
-            </>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
+        {/* HELP section */}
         <div className={styles.drawerSection}>
-          <div className={styles.drawerSectionTitle}>Help</div>
-          <Link to="/faqs"            className={styles.drawerLink} onClick={closeMenu}>❓ FAQs</Link>
-          <Link to="/shipping-info"   className={styles.drawerLink} onClick={closeMenu}>🚚 Shipping Info</Link>
-          <Link to="/returns-refunds" className={styles.drawerLink} onClick={closeMenu}>🔄 Returns & Refunds</Link>
-          <Link to="/track-order"     className={styles.drawerLink} onClick={closeMenu}>📍 Track Order</Link>
+          <div className={styles.drawerSectionTitle}>💬 Help & Info</div>
+          <Link to="/faqs"            className={styles.drawerLink} onClick={closeMenu}>
+            <span>❓ FAQs</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/shipping-info"   className={styles.drawerLink} onClick={closeMenu}>
+            <span>🚚 Shipping Info</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/returns-refunds" className={styles.drawerLink} onClick={closeMenu}>
+            <span>🔄 Returns & Refunds</span><ChevronRight size={15}/>
+          </Link>
+          <Link to="/track-order"     className={styles.drawerLink} onClick={closeMenu}>
+            <span>📍 Track Order</span><ChevronRight size={15}/>
+          </Link>
         </div>
 
+        {/* Footer buttons */}
         <div className={styles.drawerFooter}>
           <button className={styles.drawerCartBtn} onClick={() => { setCartOpen(true); closeMenu() }}>
             <ShoppingCart size={17} />
             View Cart {cartCount > 0 && `(${cartCount})`}
           </button>
+          {user && (
+            <button className={styles.drawerLogout} onClick={handleLogout}>
+              <LogOut size={15} /> Logout
+            </button>
+          )}
         </div>
+
       </div>
     </>
   )
