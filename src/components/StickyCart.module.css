@@ -5,15 +5,15 @@
 @media (max-width: 768px) {
   .bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
     position: fixed;
-    bottom: 64px; /* above bottom nav */
-    left: 0; right: 0;
+    bottom: 64px; /* sits above bottom nav */
+    left: 0;
+    right: 0;
     background: #fff;
-    padding: 10px 16px;
-    box-shadow: 0 -4px 20px rgba(0,0,0,.12);
+    padding: 10px 14px 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.13);
     z-index: 200;
     border-top: 1px solid #f0ebe4;
     animation: slideUp .25s ease;
@@ -25,16 +25,17 @@
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* Row 1: product info */
 .info {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 .thumb {
-  width: 44px; height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
@@ -47,32 +48,37 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 110px;
+  max-width: 180px;
 }
 
 .price {
-  font-size: .85rem;
+  font-size: .88rem;
   font-weight: 700;
   color: var(--accent);
+  white-space: nowrap;
+  margin-left: auto;
 }
 
+/* Row 2: buttons side by side, full width */
 .btns {
   display: flex;
   gap: 8px;
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .addBtn {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 9px 14px;
+  padding: 11px 10px;
   border-radius: 50px;
   border: 2px solid var(--deep);
   background: none;
   color: var(--deep);
   font-weight: 600;
-  font-size: .8rem;
+  font-size: .82rem;
   cursor: pointer;
   white-space: nowrap;
   transition: all .2s;
@@ -81,15 +87,17 @@
 .added { background: #2d8a4e !important; color: #fff !important; border-color: #2d8a4e !important; }
 
 .buyBtn {
-  padding: 9px 16px;
+  flex: 1;
+  padding: 11px 10px;
   border-radius: 50px;
   border: none;
   background: var(--accent);
   color: #fff;
   font-weight: 600;
-  font-size: .8rem;
+  font-size: .82rem;
   cursor: pointer;
   white-space: nowrap;
   transition: background .2s;
+  text-align: center;
 }
 .buyBtn:hover { background: var(--deep); }
