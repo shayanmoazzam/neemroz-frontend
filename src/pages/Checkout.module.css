@@ -120,7 +120,7 @@
 .field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 180,100,60), .1);
+  box-shadow: 0 0 0 3px rgba(180,100,60,.1);
 }
 .field textarea { resize: vertical; min-height: 80px; }
 
@@ -243,6 +243,8 @@
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow);
+  /* Prevent any child from overflowing the card */
+  overflow: hidden;
 }
 
 .summaryTitle {
@@ -256,13 +258,19 @@
 
 .summaryItems { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 
+/* ✅ KEY FIX: give the row a proper box model so price never clips */
 .summaryItem {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
 }
 .summaryItem img {
-  width: 52px; height: 52px;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;       /* never shrink the image */
   border-radius: 10px;
   object-fit: cover;
   background: var(--sand);
@@ -270,7 +278,8 @@
 }
 .summaryItemInfo {
   flex: 1;
-  min-width: 0;
+  min-width: 0;          /* allow text to truncate instead of pushing price out */
+  overflow: hidden;
 }
 .summaryItemInfo span {
   display: block;
@@ -285,11 +294,16 @@
   font-size: .75rem;
   color: var(--earth);
 }
+/* ✅ Price: always visible, never shrinks, aligned right */
 .summaryItemPrice {
   font-size: .85rem;
   font-weight: 600;
   color: var(--deep);
-  flex-shrink: 0;
+  flex-shrink: 0;        /* never compress the price */
+  white-space: nowrap;   /* keep ₹3,500 on one line */
+  margin-left: 8px;
+  text-align: right;
+  min-width: 52px;       /* enough room for ₹9,999 */
 }
 
 /* ── COUPON ── */
@@ -444,7 +458,23 @@
   .payMethods { gap: 8px; }
   .payMethod { min-height: 56px; font-size: .88rem; }
 
-  .summary { border-radius: 14px; padding: 18px 16px; }
+  /* On mobile, give the summary card proper padding so price isn't near edge */
+  .summary {
+    border-radius: 14px;
+    padding: 16px 14px;
+  }
+
+  /* Slightly smaller image on mobile to give price more room */
+  .summaryItem img {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .summaryItemPrice {
+    font-size: .83rem;
+    min-width: 58px;   /* slightly wider so ₹13,500 fits fully */
+  }
 
   .success { padding: 40px 16px; }
   .success h2 { font-size: 1.6rem; }
