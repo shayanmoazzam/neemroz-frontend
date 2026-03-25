@@ -345,10 +345,47 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
-  .links { display: none; }
-  .menuBtn { display: flex; }
+  .links    { display: none; }
+  .menuBtn  { display: flex; }
   .cartLabel { display: none; }
 }
-@media (max-width: 480px) {
+
+@media (max-width: 600px) {
+  .nav {
+    padding: 0 4%;
+    height: 60px;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+  }
+
+  /* Hide search, wishlist, user icons on mobile — moved to drawer */
+  .iconBtn,
+  .iconBtnLink,
+  .userDrop {
+    display: none;
+  }
+
+  /* Keep cart button but shrink it */
+  .cartBtn {
+    padding: 8px 14px;
+    font-size: .78rem;
+    gap: 5px;
+  }
+
+  .cartLabel { display: none; }
+
+  .menuBtn {
+    display: flex;
+    margin-left: 4px;
+  }
+
+  /* Full width drawer on very small screens */
   .mobileDrawer { width: 100vw; }
+}
+
+@media (max-width: 380px) {
+  .logo { font-size: 1.3rem; }
+  .cartBtn { padding: 7px 12px; }
 }
