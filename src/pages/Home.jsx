@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, Shield, Truck, RefreshCw, Leaf, ArrowRight } from 'lucide-react'
+import { Leaf, Star, Truck, RefreshCw, Shield, ArrowRight } from 'lucide-react'
 import api from '../api'
 import ProductCard from '../components/ProductCard'
 import HeroCarousel from '../components/HeroCarousel'
@@ -16,11 +16,11 @@ const CATEGORIES = [
 ]
 
 const WHY = [
-  { icon: <Leaf size={26}/>,      title: '100% Pure Cotton',   text: 'Breathable, soft and skin-friendly for all seasons.' },
-  { icon: <Star size={26}/>,      title: 'Premium Quality',    text: 'Crafted with care and attention to every detail.' },
-  { icon: <Truck size={26}/>,     title: 'Fast Delivery',      text: 'Free shipping above ₹799. Delivered in 2–4 days.' },
-  { icon: <RefreshCw size={26}/>, title: '7-Day Returns',      text: 'Easy hassle-free returns, no questions asked.' },
-  { icon: <Shield size={26}/>,    title: 'Secure Payments',    text: 'Razorpay-powered. UPI, cards and COD accepted.' },
+  { icon: <Leaf size={26}/>,      title: '100% Pure Cotton',  text: 'Breathable, soft and skin-friendly for all seasons.' },
+  { icon: <Star size={26}/>,      title: 'Premium Quality',   text: 'Crafted with care and attention to every detail.' },
+  { icon: <Truck size={26}/>,     title: 'Fast Delivery',     text: 'Free shipping above ₹799. Delivered in 2–4 days.' },
+  { icon: <RefreshCw size={26}/>, title: '7-Day Returns',     text: 'Easy hassle-free returns, no questions asked.' },
+  { icon: <Shield size={26}/>,    title: 'Secure Payments',   text: 'Razorpay-powered. UPI, cards and COD accepted.' },
 ]
 
 const REVIEWS = [
@@ -86,10 +86,10 @@ export default function Home() {
   return (
     <div className={styles.page}>
 
-      {/* ── HERO CAROUSEL (replaces old hero) ── */}
+      {/* 1. HERO CAROUSEL */}
       <HeroCarousel />
 
-      {/* ── MARQUEE ── */}
+      {/* 2. MARQUEE */}
       <div className={styles.marqueeWrap}>
         <div className={styles.marquee}>
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
@@ -98,26 +98,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── STATS ── */}
-      <div className={styles.stats} data-reveal="stats" ref={ref('stats')}>
-        {[
-          ['5K+',  'Happy Customers', '👨‍👩‍👧'],
-          ['500+', 'Products',         '🛍️'],
-          ['100%', 'Pure Cotton',      '🌿'],
-          ['4.8★', 'Avg. Rating',      '⭐'],
-        ].map(([num, label, emoji]) => (
-          <div key={label} className={`${styles.stat} ${visible.stats ? styles.statVisible : ''}`}>
-            <div className={styles.statEmoji}>{emoji}</div>
-            <div className={styles.statNum}>{num}</div>
-            <div className={styles.statLabel}>{label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── CATEGORIES ── */}
-      <section className={styles.section} id="categories"
-        data-reveal="cats" ref={ref('cats')}
-      >
+      {/* 3. CATEGORIES */}
+      <section className={styles.section} data-reveal="cats" ref={ref('cats')}>
         <div className="section-head">
           <div className="section-eyebrow">Browse by Category</div>
           <h2 className="section-title">Our <em>Collections</em></h2>
@@ -149,7 +131,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BEDSHEETS ── */}
+      {/* 4. STATS — now below categories ✅ */}
+      <div className={styles.stats} data-reveal="stats" ref={ref('stats')}>
+        {[
+          ['5K+',  'Happy Customers', '👨‍👩‍👧'],
+          ['500+', 'Products',         '🛍️'],
+          ['100%', 'Pure Cotton',      '🌿'],
+          ['4.8★', 'Avg. Rating',      '⭐'],
+        ].map(([num, label, emoji]) => (
+          <div key={label} className={`${styles.stat} ${visible.stats ? styles.statVisible : ''}`}>
+            <div className={styles.statEmoji}>{emoji}</div>
+            <div className={styles.statNum}>{num}</div>
+            <div className={styles.statLabel}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 5. BEDSHEETS */}
       <section className={`${styles.section} ${styles.sectionWhite}`}
         data-reveal="beds" ref={ref('beds')}
       >
@@ -173,7 +171,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── OFFER BANNER ── */}
+      {/* 6. OFFER BANNER */}
       <div className={styles.offerBanner}>
         <div className={styles.offerContent}>
           <div className={styles.offerLeft}>
@@ -187,7 +185,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── KIDS WEAR ── */}
+      {/* 7. KIDS WEAR */}
       <section className={`${styles.section} ${styles.sectionSand}`}
         data-reveal="kids" ref={ref('kids')}
       >
@@ -211,7 +209,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── WOMEN WEAR ── */}
+      {/* 8. WOMEN WEAR */}
       <section className={`${styles.section} ${styles.sectionWhite}`}
         data-reveal="women" ref={ref('women')}
       >
@@ -235,7 +233,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── WHY US ── */}
+      {/* 9. WHY US */}
       <section className={`${styles.section} ${styles.sectionDeep}`}
         data-reveal="why" ref={ref('why')}
       >
@@ -255,7 +253,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── REVIEWS ── */}
+      {/* 10. REVIEWS */}
       <section className={`${styles.section} ${styles.sectionSand}`}
         data-reveal="reviews" ref={ref('reviews')}
       >
