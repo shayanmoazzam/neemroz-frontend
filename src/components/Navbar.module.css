@@ -2,9 +2,9 @@
   background: var(--deep);
   color: var(--sand);
   text-align: center;
-  font-size: .75rem;
-  padding: 9px;
-  letter-spacing: .06em;
+  font-size: .72rem;
+  padding: 8px;
+  letter-spacing: .05em;
 }
 
 .nav {
@@ -17,13 +17,13 @@
   position: sticky;
   top: 0;
   z-index: 800;
-  height: 68px;
+  height: 64px;
   box-shadow: 0 2px 20px rgba(61,43,31,.06);
 }
 
 .logo {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.9rem;
+  font-size: 1.8rem;
   font-weight: 600;
   color: var(--deep);
   letter-spacing: .01em;
@@ -50,7 +50,7 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .iconBtn {
@@ -94,7 +94,6 @@
   cursor: pointer;
 }
 .cartBtn:hover { background: var(--accent); transform: scale(1.03); }
-.cartLabel { }
 
 .badge {
   background: var(--accent); color: #fff;
@@ -108,7 +107,7 @@
   background: none; border: none;
   color: var(--ink); cursor: pointer;
   align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 40px; height: 40px; border-radius: 50%;
   transition: background .2s;
 }
 .menuBtn:hover { background: var(--sand); }
@@ -145,7 +144,7 @@
 .searchBar {
   background: var(--white);
   border-bottom: 1px solid var(--sand);
-  padding: 14px 5%;
+  padding: 12px 5%;
   animation: fadeDown .2s ease;
   position: relative;
   z-index: 790;
@@ -154,7 +153,7 @@
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.searchForm { display: flex; gap: 10px; max-width: 640px; margin: 0 auto; }
+.searchForm { display: flex; gap: 8px; max-width: 640px; margin: 0 auto; }
 .searchInputWrap {
   flex: 1; position: relative;
   display: flex; align-items: center;
@@ -181,7 +180,7 @@
 }
 .searchSubmit {
   background: var(--deep); color: var(--cream);
-  border: none; padding: 11px 24px;
+  border: none; padding: 11px 20px;
   border-radius: 50px; font-size: .85rem;
   font-weight: 500; cursor: pointer; transition: background .2s;
   white-space: nowrap;
@@ -205,9 +204,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
-.searchLoading {
-  padding: 16px 20px; font-size: .85rem; color: var(--earth); text-align: center;
-}
+.searchLoading { padding: 16px 20px; font-size: .85rem; color: var(--earth); text-align: center; }
 .searchResult {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 16px; cursor: pointer;
@@ -216,15 +213,9 @@
 }
 .searchResult:last-child { border-bottom: none; }
 .searchResult:hover { background: var(--cream); }
-.resultImg {
-  width: 44px; height: 44px; border-radius: 8px;
-  object-fit: cover; flex-shrink: 0; background: var(--sand);
-}
+.resultImg { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
 .resultInfo { flex: 1; min-width: 0; }
-.resultName {
-  font-size: .86rem; font-weight: 500; color: var(--deep);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.resultName { font-size: .86rem; font-weight: 500; color: var(--deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .resultMeta { display: flex; gap: 10px; margin-top: 3px; }
 .resultPrice { font-size: .78rem; color: var(--accent); font-weight: 600; }
 .resultCat { font-size: .73rem; color: var(--earth); text-transform: capitalize; }
@@ -237,10 +228,7 @@
   transition: background .2s;
 }
 .searchAllBtn:hover { background: #ede5d8; }
-.noResults {
-  padding: 16px 20px; font-size: .85rem;
-  color: var(--earth); text-align: center;
-}
+.noResults { padding: 16px 20px; font-size: .85rem; color: var(--earth); text-align: center; }
 
 /* ── MOBILE OVERLAY ── */
 .menuOverlay {
@@ -267,7 +255,7 @@
 
 .drawerHeader {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 20px 22px;
+  padding: 18px 20px;
   border-bottom: 1px solid var(--sand);
   background: var(--cream);
   position: sticky; top: 0; z-index: 1;
@@ -279,7 +267,7 @@
 .drawerLogo span { color: var(--accent); }
 .drawerClose {
   background: none; border: none; color: var(--earth);
-  cursor: pointer; width: 36px; height: 36px;
+  cursor: pointer; width: 38px; height: 38px;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   transition: background .2s;
 }
@@ -287,7 +275,7 @@
 
 .drawerUser {
   display: flex; align-items: center; gap: 14px;
-  padding: 18px 22px;
+  padding: 16px 20px;
   background: var(--sand);
   border-bottom: 1px solid #e8ddd0;
 }
@@ -301,16 +289,16 @@
 .drawerName { font-weight: 600; font-size: .9rem; color: var(--deep); }
 .drawerEmail { font-size: .75rem; color: var(--earth); }
 
-.drawerSection { padding: 16px 22px; border-bottom: 1px solid var(--sand); }
+.drawerSection { padding: 14px 20px; border-bottom: 1px solid var(--sand); }
 .drawerSectionTitle {
   font-size: .68rem; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase;
-  color: var(--earth); margin-bottom: 8px;
+  color: var(--earth); margin-bottom: 6px;
 }
 .drawerLink {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 0;
-  font-size: .9rem; color: var(--ink);
+  padding: 13px 0;
+  font-size: .92rem; color: var(--ink);
   border-bottom: 1px solid #f0ebe4;
   transition: color .2s;
 }
@@ -323,21 +311,21 @@
 }
 .drawerLogout {
   display: flex; align-items: center; gap: 8px;
-  padding: 11px 0; width: 100%; border: none;
-  background: none; color: #e53e3e; font-size: .9rem;
+  padding: 13px 0; width: 100%; border: none;
+  background: none; color: #e53e3e; font-size: .92rem;
   cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: left;
 }
 
 .drawerFooter {
-  padding: 20px 22px;
+  padding: 20px;
   margin-top: auto;
   border-top: 1px solid var(--sand);
 }
 .drawerCartBtn {
-  width: 100%; padding: 14px;
+  width: 100%; padding: 15px;
   background: var(--deep); color: var(--cream);
   border: none; border-radius: 50px;
-  font-size: .9rem; font-weight: 600;
+  font-size: .92rem; font-weight: 600;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer; transition: background .2s;
 }
@@ -345,47 +333,25 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 860px) {
-  .links    { display: none; }
-  .menuBtn  { display: flex; }
+  .links   { display: none; }
+  .menuBtn { display: flex; }
   .cartLabel { display: none; }
 }
 
 @media (max-width: 600px) {
-  .nav {
-    padding: 0 4%;
-    height: 60px;
-  }
-
-  .logo {
-    font-size: 1.5rem;
-  }
-
-  /* Hide search, wishlist, user icons on mobile — moved to drawer */
-  .iconBtn,
-  .iconBtnLink,
-  .userDrop {
-    display: none;
-  }
-
-  /* Keep cart button but shrink it */
-  .cartBtn {
-    padding: 8px 14px;
-    font-size: .78rem;
-    gap: 5px;
-  }
-
+  .nav { padding: 0 4%; height: 58px; }
+  .logo { font-size: 1.45rem; }
+  .iconBtn, .iconBtnLink, .userDrop { display: none; }
+  .cartBtn { padding: 8px 14px; font-size: .78rem; gap: 5px; }
   .cartLabel { display: none; }
-
-  .menuBtn {
-    display: flex;
-    margin-left: 4px;
-  }
-
-  /* Full width drawer on very small screens */
-  .mobileDrawer { width: 100vw; }
+  .menuBtn { display: flex; margin-left: 2px; }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
+  .mobileDrawer { width: 100vw; }
   .logo { font-size: 1.3rem; }
   .cartBtn { padding: 7px 12px; }
+  /* Bigger touch targets on drawer links */
+  .drawerLink { padding: 15px 0; font-size: .95rem; }
+  .drawerLogout { padding: 15px 0; }
 }

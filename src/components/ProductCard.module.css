@@ -22,29 +22,31 @@
 .card:hover .imgWrap img { transform: scale(1.07); }
 
 .discBadge {
-  position: absolute; top: 12px; right: 12px;
+  position: absolute; top: 10px; right: 10px;
   background: #2d8a4e; color: #fff;
-  font-size: .68rem; font-weight: 600;
-  padding: 3px 9px; border-radius: 50px;
+  font-size: .65rem; font-weight: 600;
+  padding: 3px 8px; border-radius: 50px;
 }
 .badge {
-  position: absolute; top: 12px; left: 12px;
+  position: absolute; top: 10px; left: 10px;
   background: var(--accent); color: #fff;
-  font-size: .66rem; font-weight: 700;
-  padding: 3px 9px; border-radius: 50px;
+  font-size: .63rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 50px;
   letter-spacing: .04em;
 }
 
+/* Wishlist — always visible on mobile (no hover needed) */
 .wishBtn {
-  position: absolute; top: 46px; right: 12px;
-  width: 30px; height: 30px; border-radius: 50%;
-  background: rgba(255,255,255,.9);
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.92);
   border: none; display: flex;
   align-items: center; justify-content: center;
   cursor: pointer; transition: all .2s;
   color: var(--earth);
   opacity: 0;
   transform: scale(.8);
+  z-index: 2;
 }
 .card:hover .wishBtn { opacity: 1; transform: scale(1); }
 .wished {
@@ -54,6 +56,7 @@
   color: #e53e3e !important;
 }
 
+/* Add to cart — always visible on mobile */
 .cartOverlay {
   position: absolute; bottom: 0; left: 0; right: 0;
   background: rgba(26,16,8,.82);
@@ -66,28 +69,46 @@
   cursor: pointer;
   transform: translateY(100%);
   transition: transform .25s ease;
+  z-index: 2;
 }
 .card:hover .cartOverlay { transform: translateY(0); }
 
-.info { padding: 14px 14px 16px; }
+.info { padding: 12px 12px 14px; }
 .name {
-  font-size: .88rem; font-weight: 500;
+  font-size: .86rem; font-weight: 500;
   color: var(--deep); line-height: 1.4;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .rating {
-  color: #E8A838; font-size: .72rem;
-  letter-spacing: 1px; margin-bottom: 6px;
-  display: flex; align-items: center; gap: 5px;
+  color: #E8A838; font-size: .7rem;
+  letter-spacing: 1px; margin-bottom: 5px;
+  display: flex; align-items: center; gap: 4px;
 }
-.rating span { color: var(--earth); font-size: .75rem; }
-.priceRow { display: flex; align-items: center; gap: 8px; }
+.rating span { color: var(--earth); font-size: .73rem; }
+.priceRow { display: flex; align-items: center; gap: 7px; }
 .price {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.15rem; font-weight: 700; color: var(--deep);
+  font-size: 1.1rem; font-weight: 700; color: var(--deep);
 }
-.oldPrice { font-size: .8rem; color: var(--earth); text-decoration: line-through; }
+.oldPrice { font-size: .78rem; color: var(--earth); text-decoration: line-through; }
+
+/* ── MOBILE: always show cart + wishlist (no hover needed on touch) ── */
+@media (hover: none) {
+  .wishBtn {
+    opacity: 1;
+    transform: scale(1);
+    top: 8px; right: 8px;
+  }
+  .discBadge { top: 8px; right: 8px; }
+  /* If discount badge exists, push wishBtn below it */
+  .cartOverlay {
+    transform: translateY(0);
+    background: rgba(26,16,8,.75);
+    padding: 9px;
+    font-size: .75rem;
+  }
+}
