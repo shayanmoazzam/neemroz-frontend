@@ -8,6 +8,7 @@ import {
 import api from '../api'
 import { useCart } from '../context/CartContext'
 import ProductCard from '../components/ProductCard'
+import StickyCart from '../components/StickyCart'
 import styles from './ProductDetail.module.css'
 
 const COLOR_NAMES = {
@@ -46,6 +47,7 @@ export default function ProductDetail() {
   const [zoomed, setZoomed]           = useState(false)
   const [added, setAdded]             = useState(false)
   const [activeTab, setActiveTab]     = useState('description')
+  const [shareOpen, setShareOpen]     = useState(false)
   const thumbsRef = useRef(null)
 
   // Touch swipe refs
@@ -112,12 +114,23 @@ export default function ProductDetail() {
     touchStartY.current = null
   }
 
+  // Share handlers
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({ title: product.name, url: window.location.href })
     } else {
-      navigator.clipboard.writeText(window.location.href)
+      setShareOpen(s => !s)
     }
+  }
+  const handleWhatsApp = () => {
+    const msg = `🛒 Check out *${product.name}* on Neemroz!
+₹${product.price?.toLocaleString('en-IN')}${product.oldPrice ? ` ~~₹${product.oldPrice?.toLocaleString('en-IN')}~~` : ''}
+${window.location.href}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+    setShareOpen(false)
   }
 
   return (
@@ -154,7 +167,6 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Main Image — swipeable on mobile */}
           <div className={styles.mainImgWrap}>
             <div
               className={styles.mainImg}
@@ -200,9 +212,22 @@ export default function ProductDetail() {
               {product.category === 'bedsheet' ? '🛏️ Bed Sheet' : product.category === 'kids' ? '👗 Kids Wear' : '✨ Women Wear'}
             </span>
             <div className={styles.topActions}>
-              <button className={styles.shareBtn} onClick={handleShare} title="Share">
-                <Share2 size={15} />
-              </button>
+              {/* Share button with dropdown */}
+              <div className={styles.shareWrap}>
+                <button className={styles.shareBtn} onClick={handleShare} title="Share">
+                  <Share2 size={15} />
+                </button>
+                {shareOpen && (
+                  <div className={styles.shareMenu}>
+                    <button className={styles.shareMenuItem} onClick={handleWhatsApp}>
+                      <span>💬</span> Share on WhatsApp
+                    </button>
+                    <button className={styles.shareMenuItem} onClick={handleCopyLink}>
+                      <span>🔗</span> Copy Link
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 className={`${styles.wishBtn} ${wished ? styles.wished : ''}`}
                 onClick={() => setWished(w => !w)}
@@ -287,7 +312,6 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Actions — also serves as anchor for sticky bar */}
           <div className={styles.actions} id="product-actions">
             <button
               className={`${styles.addBtn} ${added ? styles.addedBtn : ''}`}
@@ -302,6 +326,11 @@ export default function ProductDetail() {
               Buy Now
             </button>
           </div>
+
+          {/* WhatsApp CTA */}
+          <button className={styles.waBtn} onClick={handleWhatsApp}>
+            💬 Share on WhatsApp
+          </button>
 
           <div className={styles.trust}>
             <div className={styles.trustItem}><Truck size={14}/> Free delivery above ₹799</div>
@@ -415,6 +444,14 @@ export default function ProductDetail() {
           )}
         </div>
       )}
+
+      {/* STICKY ADD TO CART — mobile only, appears when buttons scroll out of view */}
+      <StickyCart
+        product={product}
+        selectedSize={selectedSize}
+        selectedColor={selectedColor}
+        qty={qty}
+      />
 
     </div>
   )
