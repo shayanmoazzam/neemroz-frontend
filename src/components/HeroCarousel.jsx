@@ -6,10 +6,10 @@ import styles from './HeroCarousel.module.css'
 const SLIDES = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1400&q=80',
+    image: 'https://www.ayezu.com/images/products/new-21.jpg',
     eyebrow: 'New Arrivals 2026',
     title: 'Luxurious Bed Sheets',
-    subtitle: 'Transform your bedroom with our premium cotton collection',
+    subtitle: 'Transform your bedroom with our premium embroidered cotton collection',
     cta: 'Shop Bed Sheets',
     link: '/shop?category=bedsheet',
     align: 'left',
@@ -17,24 +17,24 @@ const SLIDES = [
   },
   {
     id: 2,
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80',
+    image: 'https://www.ayezu.com/images/products/new-15.jpg',
     eyebrow: 'Festive Collection',
     title: 'Kids Ethnic Wear',
-    subtitle: 'Adorable outfits for your little ones — crafted with love',
+    subtitle: 'Adorable outfits for your little ones — crafted with love & tradition',
     cta: 'Shop Kids Wear',
     link: '/shop?category=kids',
-    align: 'center',
+    align: 'left',
     dark: true,
   },
   {
     id: 3,
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1400&q=80',
+    image: 'https://www.ayezu.com/images/products/new-18.jpg',
     eyebrow: 'Premium Fabrics',
     title: 'Elegant Women Wear',
     subtitle: 'Grace and tradition woven into every thread',
     cta: 'Explore Collection',
     link: '/shop?category=women',
-    align: 'right',
+    align: 'left',
     dark: false,
   },
 ]
@@ -114,10 +114,16 @@ export default function HeroCarousel() {
       ))}
 
       {/* ── ARROWS ── */}
-      <button className={`${styles.arrow} ${styles.arrowLeft}`} onClick={() => handleNav('prev')}>
+      <button
+        className={`${styles.arrow} ${styles.arrowLeft}`}
+        onClick={() => handleNav('prev')}
+      >
         <ChevronLeft size={24} />
       </button>
-      <button className={`${styles.arrow} ${styles.arrowRight}`} onClick={() => handleNav('next')}>
+      <button
+        className={`${styles.arrow} ${styles.arrowRight}`}
+        onClick={() => handleNav('next')}
+      >
         <ChevronRight size={24} />
       </button>
 
@@ -136,6 +142,7 @@ export default function HeroCarousel() {
       <div className={styles.progress} key={active}>
         <div className={styles.progressBar} />
       </div>
+
     </div>
   )
 }

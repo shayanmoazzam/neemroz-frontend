@@ -1,21 +1,25 @@
 .hero {
   position: relative;
-  height: 88vh;
-  min-height: 520px;
-  max-height: 860px;
+  height: 80vh;
+  min-height: 480px;
+  max-height: 780px;
   overflow: hidden;
   background: var(--deep);
 }
 
+
 /* ── SLIDES ── */
 .slide {
   position: absolute; inset: 0;
-  background-size: cover;
-  background-position: center;
+  background-size: contain;        /* ← changed from cover to contain */
+  background-repeat: no-repeat;
+  background-position: center right; /* ← image sits on the right side */
+  background-color: var(--deep);   /* ← fills left side with dark bg */
   opacity: 0;
-  transform: scale(1.04);
+  transform: scale(1.02);
   transition: opacity .7s ease, transform 5s ease;
 }
+
 .slideActive {
   opacity: 1;
   transform: scale(1);
@@ -26,17 +30,18 @@
   position: absolute; inset: 0;
   background: linear-gradient(
     105deg,
-    rgba(26,16,8,.72) 0%,
-    rgba(26,16,8,.3) 50%,
-    rgba(26,16,8,.1) 100%
+    rgba(26,16,8,.75) 0%,
+    rgba(26,16,8,.35) 55%,
+    rgba(26,16,8,.10) 100%
   );
   z-index: 1;
 }
 .overlayDark {
   background: linear-gradient(
-    180deg,
-    rgba(0,0,0,.35) 0%,
-    rgba(0,0,0,.65) 100%
+    105deg,
+    rgba(0,0,0,.80) 0%,
+    rgba(0,0,0,.45) 55%,
+    rgba(0,0,0,.15) 100%
   );
 }
 
@@ -45,20 +50,36 @@
   position: absolute;
   z-index: 2;
   top: 50%;
-  transform: translateY(-50%);
   max-width: 560px;
+  pointer-events: none;
+}
+
+.align_left   { left: 8%; }
+.align_center { left: 50%; }
+.align_right  { right: 8%; text-align: right; }
+
+/* Hide inactive */
+.contentHidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(-50%);
+}
+
+/* Show & animate active */
+.contentActive {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
   animation: slideUp .7s ease forwards;
 }
-.align_left   { left: 8%; }
-.align_center { left: 50%; transform: translate(-50%, -50%); text-align: center; }
-.align_right  { right: 8%; text-align: right; }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(calc(-50% + 28px)); }
   to   { opacity: 1; transform: translateY(-50%); }
 }
-/* Center alignment fix for animation */
-.align_center {
+
+.align_center.contentActive {
   animation: slideUpCenter .7s ease forwards;
 }
 @keyframes slideUpCenter {
@@ -66,6 +87,7 @@
   to   { opacity: 1; transform: translate(-50%, -50%); }
 }
 
+/* ── TEXT ── */
 .eyebrow {
   font-size: .72rem;
   letter-spacing: .18em;
@@ -87,12 +109,13 @@
 
 .subtitle {
   font-size: clamp(.88rem, 1.5vw, 1rem);
-  color: rgba(255,255,255,.82);
+  color: rgba(255,255,255,.85);
   line-height: 1.6;
   margin-bottom: 32px;
   max-width: 420px;
 }
 
+/* ── CTA BUTTONS ── */
 .ctaRow { display: flex; gap: 14px; flex-wrap: wrap; }
 .align_center .ctaRow { justify-content: center; }
 .align_right  .ctaRow { justify-content: flex-end; }
@@ -113,7 +136,7 @@
   padding: 14px 32px;
   background: transparent;
   color: #fff;
-  border: 1.5px solid rgba(255,255,255,.6);
+  border: 1.5px solid rgba(255,255,255,.65);
   border-radius: 50px;
   font-size: .9rem; font-weight: 500;
   font-family: 'DM Sans', sans-serif;
@@ -180,34 +203,17 @@
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .hero { height: 70vh; min-height: 420px; }
-  .content { max-width: 90%; }
-  .align_right { right: 5%; }
+  .content { max-width: 85%; }
   .align_left  { left: 5%; }
+  .align_right { right: 5%; }
   .arrow { width: 38px; height: 38px; }
   .arrowLeft  { left: 12px; }
   .arrowRight { right: 12px; }
 }
 @media (max-width: 480px) {
-  .title { font-size: 2rem; }
-  .ctaBtn, .ctaOutline { padding: 12px 22px; font-size: .84rem; }
-}
-
-
-/* Hide inactive slide content */
-.contentHidden {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-}
-
-/* Show & animate active slide content */
-.contentActive {
-  opacity: 1;
-  visibility: visible;
-  animation: slideUp .7s ease forwards;
-}
-
-/* Fix center alignment animation separately */
-.align_center.contentActive {
-  animation: slideUpCenter .7s ease forwards;
+  .hero { height: 60vh; min-height: 360px; }
+  .title { font-size: 1.9rem; }
+  .subtitle { font-size: .82rem; margin-bottom: 22px; }
+  .ctaBtn, .ctaOutline { padding: 11px 20px; font-size: .82rem; }
+  .arrowLeft, .arrowRight { display: none; }
 }
