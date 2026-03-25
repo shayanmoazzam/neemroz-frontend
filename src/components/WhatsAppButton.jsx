@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styles from './WhatsAppButton.module.css'
 
-const PHONE = '919999999999' // ← Replace with your WhatsApp number
+const PHONE = '917001065007' // India (+91) prefix
 const DEFAULT_MSG = 'Hi! I found your store and I am interested in your products. Can you help me?'
 
 export default function WhatsAppButton() {
