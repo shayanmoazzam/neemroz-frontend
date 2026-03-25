@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
-  Heart, ShoppingCart, Star, ArrowLeft, Shield,
+  Heart, ShoppingCart, Star, Shield,
   Truck, RefreshCw, ZoomIn, X, ChevronLeft, ChevronRight,
   Check, Package, Share2
 } from 'lucide-react'
@@ -48,6 +48,10 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab]     = useState('description')
   const thumbsRef = useRef(null)
 
+  // Touch swipe refs
+  const touchStartX = useRef(null)
+  const touchStartY = useRef(null)
+
   useEffect(() => {
     setLoading(true)
     setActiveImg(0)
@@ -92,6 +96,22 @@ export default function ProductDetail() {
   const prevImg = () => setActiveImg(i => (i - 1 + images.length) % images.length)
   const nextImg = () => setActiveImg(i => (i + 1) % images.length)
 
+  // Touch swipe handlers
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 40) {
+      deltaX < 0 ? nextImg() : prevImg()
+    }
+    touchStartX.current = null
+    touchStartY.current = null
+  }
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({ title: product.name, url: window.location.href })
@@ -103,7 +123,7 @@ export default function ProductDetail() {
   return (
     <div className={styles.page}>
 
-      {/* ── BREADCRUMB ── */}
+      {/* BREADCRUMB */}
       <div className={styles.breadcrumb}>
         <span onClick={() => navigate('/')}>Home</span>
         <span className={styles.sep}>›</span>
@@ -118,9 +138,8 @@ export default function ProductDetail() {
 
       <div className={styles.container}>
 
-        {/* ── LEFT: Gallery ── */}
+        {/* LEFT: Gallery */}
         <div className={styles.gallery}>
-          {/* Thumbnails — vertical */}
           {images.length > 1 && (
             <div className={styles.thumbsCol} ref={thumbsRef}>
               {images.map((img, i) => (
@@ -135,9 +154,13 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Main Image */}
+          {/* Main Image — swipeable on mobile */}
           <div className={styles.mainImgWrap}>
-            <div className={styles.mainImg}>
+            <div
+              className={styles.mainImg}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               <img src={images[activeImg]} alt={product.name} key={activeImg} className={styles.mainImgEl} />
               {discount > 0 && <div className={styles.discBadge}>-{discount}%</div>}
               {product.badge && <div className={styles.badge}>{product.badge}</div>}
@@ -155,18 +178,21 @@ export default function ProductDetail() {
                 </>
               )}
             </div>
-            {/* Dot indicators */}
             {images.length > 1 && (
               <div className={styles.imgDots}>
                 {images.map((_, i) => (
-                  <button key={i} className={`${styles.imgDot} ${activeImg === i ? styles.imgDotActive : ''}`} onClick={() => setActiveImg(i)} />
+                  <button
+                    key={i}
+                    className={`${styles.imgDot} ${activeImg === i ? styles.imgDotActive : ''}`}
+                    onClick={() => setActiveImg(i)}
+                  />
                 ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* ── RIGHT: Info ── */}
+        {/* RIGHT: Info */}
         <div className={styles.info}>
 
           <div className={styles.topRow}>
@@ -212,7 +238,6 @@ export default function ProductDetail() {
 
           <div className={styles.divider} />
 
-          {/* Colors */}
           {product.colors?.length > 0 && (
             <div className={styles.optionGroup}>
               <div className={styles.optionLabel}>
@@ -232,15 +257,11 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Sizes */}
           {product.sizes?.length > 0 && (
             <div className={styles.optionGroup}>
               <div className={styles.optionLabel}>
                 Size — <span className={styles.optionVal}>{selectedSize}</span>
-                <span
-                  className={styles.sizeGuideLink}
-                  onClick={() => navigate('/size-guide')}
-                >Size Guide →</span>
+                <span className={styles.sizeGuideLink} onClick={() => navigate('/size-guide')}>Size Guide →</span>
               </div>
               <div className={styles.sizes}>
                 {product.sizes.map(s => (
@@ -256,7 +277,6 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Quantity */}
           <div className={styles.optionGroup}>
             <div className={styles.optionLabel}>Quantity</div>
             <div className={styles.qtyRow}>
@@ -267,8 +287,8 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className={styles.actions}>
+          {/* Actions — also serves as anchor for sticky bar */}
+          <div className={styles.actions} id="product-actions">
             <button
               className={`${styles.addBtn} ${added ? styles.addedBtn : ''}`}
               onClick={handleAddToCart}
@@ -283,7 +303,6 @@ export default function ProductDetail() {
             </button>
           </div>
 
-          {/* Trust */}
           <div className={styles.trust}>
             <div className={styles.trustItem}><Truck size={14}/> Free delivery above ₹799</div>
             <div className={styles.trustItem}><RefreshCw size={14}/> 7-day easy returns</div>
@@ -291,7 +310,6 @@ export default function ProductDetail() {
             <div className={styles.trustItem}><Package size={14}/> Packed within 24 hours</div>
           </div>
 
-          {/* What's Included */}
           {includes.length > 0 && (
             <div className={styles.includes}>
               <div className={styles.includesTitle}>📦 What's Included</div>
@@ -308,7 +326,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* ── TABS: Description / Details / Reviews ── */}
+      {/* TABS */}
       <div className={styles.tabs}>
         <div className={styles.tabBar}>
           {['description', 'details', 'reviews'].map(t => (
@@ -321,12 +339,8 @@ export default function ProductDetail() {
             </button>
           ))}
         </div>
-
         <div className={styles.tabContent}>
-          {activeTab === 'description' && (
-            <p className={styles.desc}>{product.description}</p>
-          )}
-
+          {activeTab === 'description' && <p className={styles.desc}>{product.description}</p>}
           {activeTab === 'details' && (
             <div className={styles.detailsTable}>
               <div className={styles.detailRow}><span>Category</span><span style={{ textTransform: 'capitalize' }}>{product.category}</span></div>
@@ -338,7 +352,6 @@ export default function ProductDetail() {
               <div className={styles.detailRow}><span>SKU</span><span>AYZ-{String(product.id).padStart(4, '0')}</span></div>
             </div>
           )}
-
           {activeTab === 'reviews' && (
             <div className={styles.reviewsList}>
               <div className={styles.reviewSummary}>
@@ -366,7 +379,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* ── RELATED PRODUCTS ── */}
+      {/* RELATED */}
       {related.length > 0 && (
         <div className={styles.related}>
           <div className="section-head">
@@ -380,7 +393,7 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* ── ZOOM MODAL ── */}
+      {/* ZOOM MODAL */}
       {zoomed && (
         <div className={styles.zoomOverlay} onClick={() => setZoomed(false)}>
           <button className={styles.zoomClose}><X size={22} /></button>
