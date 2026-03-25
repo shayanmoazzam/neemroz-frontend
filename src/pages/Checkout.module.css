@@ -58,7 +58,7 @@
 .left {
   display: flex;
   flex-direction: column;
-  min-width: 0;     /* prevent flex child from overflowing */
+  min-width: 0;
   width: 100%;
 }
 
@@ -217,8 +217,6 @@
   font-weight: 600; color: var(--earth);
   margin: 0 0 14px;
 }
-
-/* ✅ CRITICAL: items must not overflow */
 .summaryItems { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; width: 100%; }
 .summaryItem {
   display: flex; align-items: center;
@@ -231,16 +229,13 @@
   border-radius: 8px; object-fit: cover;
   background: var(--sand); flex-shrink: 0;
 }
-.summaryItemInfo {
-  flex: 1; min-width: 0; overflow: hidden;
-}
+.summaryItemInfo { flex: 1; min-width: 0; overflow: hidden; }
 .summaryItemInfo span {
   display: block; font-size: .8rem;
   font-weight: 500; color: var(--deep);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .summaryItemInfo small { font-size: .72rem; color: var(--earth); }
-/* ✅ Price always visible, never overflows */
 .summaryItemPrice {
   font-size: .82rem; font-weight: 600; color: var(--deep);
   flex-shrink: 0; white-space: nowrap;
@@ -338,16 +333,25 @@
   .formTitle { font-size: 1.15rem; margin-bottom: 14px; }
   .row { flex-direction: column; gap: 0; }
   .field { margin-bottom: 12px; }
-  .field input, .field select { font-size: .85rem; min-height: 44px; padding: 10px 12px; }
+
+  /* ✅ KEY FIX: 16px prevents Chrome/Safari auto-zoom on input focus */
+  .field input,
+  .field select,
+  .field textarea,
+  .couponInput {
+    font-size: 16px !important;
+    min-height: 48px;
+    padding: 10px 12px;
+  }
 
   /* Payment buttons */
   .payMethods { gap: 8px; }
-  .payMethod { min-height: 54px; padding: 12px 14px; }
-  .payLabel { font-size: .88rem; }
+  .payMethod { min-height: 54px; padding: 12px 14px; font-size: 16px; }
+  .payLabel { font-size: 16px; }
 
   /* Nav buttons */
   .navBtns { flex-direction: column-reverse; gap: 8px; margin-top: 14px; }
-  .navBtns button { width: 100%; min-height: 52px; font-size: .95rem; }
+  .navBtns button { width: 100%; min-height: 52px; font-size: 16px; }
 
   /* Summary card tighter */
   .summary { padding: 14px 12px; border-radius: 12px; }
@@ -357,7 +361,6 @@
   .summaryItemPrice { font-size: .8rem; min-width: 54px; }
 
   /* Coupon */
-  .couponInput { font-size: .8rem; }
   .couponBtn { font-size: .78rem; padding: 8px 12px; }
 
   /* Success */
