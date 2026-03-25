@@ -13,6 +13,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Checkout from './pages/Checkout'
 import Orders from './pages/Orders'
+import ProductDetail from './pages/ProductDetail'
 import FAQs from './pages/FAQs'
 import ShippingInfo from './pages/ShippingInfo'
 import ReturnsRefunds from './pages/ReturnsRefunds'
@@ -50,6 +51,7 @@ export default function App() {
                 <Routes>
                   <Route path="/"                element={<Home />} />
                   <Route path="/shop"            element={<Shop />} />
+                  <Route path="/product/:id"     element={<ProductDetail />} />
                   <Route path="/checkout"        element={<Checkout />} />
                   <Route path="/orders"          element={<Orders />} />
                   <Route path="/faqs"            element={<FAQs />} />
