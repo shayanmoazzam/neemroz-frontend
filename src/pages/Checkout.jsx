@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, CreditCard, Smartphone, Truck } from 'lucide-react'
 import { useCart } from '../context/CartContext'
@@ -25,13 +25,13 @@ export default function Checkout() {
   const { cartItems, cartTotal, shipping, grandTotal, clearCart } = useCart()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const pageTopRef = useRef(null)
 
-  const [step, setStep]             = useState(0)
-  const [payMethod, setPayMethod]   = useState('UPI')
-  const [loading, setLoading]       = useState(false)
+  const [step, setStep]               = useState(0)
+  const [payMethod, setPayMethod]     = useState('UPI')
+  const [loading, setLoading]         = useState(false)
   const [placedOrder, setPlacedOrder] = useState(null)
 
-  // Coupon state
   const [coupon, setCoupon]                 = useState('')
   const [couponApplied, setCouponApplied]   = useState(false)
   const [couponDiscount, setCouponDiscount] = useState(0)
@@ -48,9 +48,13 @@ export default function Checkout() {
     pinCode:   '',
   })
 
+  // ✅ Scroll to top whenever step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  // Coupon logic
   const applyCoupon = () => {
     const code = coupon.trim().toUpperCase()
     if (COUPONS[code]) {
@@ -73,9 +77,9 @@ export default function Checkout() {
     setCouponError('')
   }
 
-  const discountedTotal  = cartTotal - couponDiscount
-  const discountedShip   = discountedTotal >= 799 ? 0 : 79
-  const finalTotal       = discountedTotal + discountedShip
+  const discountedTotal = cartTotal - couponDiscount
+  const discountedShip  = discountedTotal >= 799 ? 0 : 79
+  const finalTotal      = discountedTotal + discountedShip
 
   const validateStep0 = () => {
     const { firstName, lastName, phone, address, city, pinCode } = form
@@ -171,16 +175,16 @@ export default function Checkout() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} ref={pageTopRef}>
 
-      {/* ── PROGRESS BAR ── */}
+      {/* PROGRESS BAR */}
       <div className={styles.progressBar}>
         {STEPS.map((s, i) => (
           <React.Fragment key={s}>
             <div className={`${styles.stepDot} ${i <= step ? styles.stepActive : ''}`}>
               {i < step ? <CheckCircle size={16} /> : i + 1}
             </div>
-            <div className={styles.stepLabel}>{s}</div>
+            <div className={`${styles.stepLabel} ${i <= step ? styles.stepLabelActive : ''}`}>{s}</div>
             {i < STEPS.length - 1 && (
               <div className={`${styles.stepLine} ${i < step ? styles.stepLineActive : ''}`} />
             )}
@@ -190,7 +194,7 @@ export default function Checkout() {
 
       <div className={styles.content}>
 
-        {/* ── LEFT: Form ── */}
+        {/* LEFT: Form */}
         <div className={styles.left}>
 
           {/* Step 0: Delivery */}
@@ -213,7 +217,7 @@ export default function Checkout() {
               </div>
               <div className={styles.field}>
                 <label>Phone Number *</label>
-                <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="9876543210" maxLength={10} />
+                <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="9876543210" maxLength={10} inputMode="numeric" />
               </div>
               <div className={styles.field}>
                 <label>Address Line 1 *</label>
@@ -226,7 +230,7 @@ export default function Checkout() {
                 </div>
                 <div className={styles.field}>
                   <label>PIN Code *</label>
-                  <input value={form.pinCode} onChange={e => set('pinCode', e.target.value)} placeholder="411001" maxLength={6} />
+                  <input value={form.pinCode} onChange={e => set('pinCode', e.target.value)} placeholder="411001" maxLength={6} inputMode="numeric" />
                 </div>
               </div>
               <div className={styles.field}>
@@ -243,7 +247,7 @@ export default function Checkout() {
           {/* Step 1: Payment */}
           {step === 1 && (
             <div className={styles.formBox}>
-              <h2 className={styles.formTitle}>Choose Payment Method</h2>
+              <h2 className={styles.formTitle}>Payment Method</h2>
               <div className={styles.payMethods}>
                 {PAY_METHODS.map(m => (
                   <button
@@ -251,35 +255,23 @@ export default function Checkout() {
                     className={`${styles.payMethod} ${payMethod === m.key ? styles.paySelected : ''}`}
                     onClick={() => setPayMethod(m.key)}
                   >
-                    {m.icon}
-                    <span>{m.label}</span>
+                    <span className={styles.payIcon}>{m.icon}</span>
+                    <span className={styles.payLabel}>{m.label}</span>
+                    {payMethod === m.key && <span className={styles.payCheck}>✓</span>}
                   </button>
                 ))}
               </div>
 
-              {payMethod === 'UPI' && (
-                <div className={styles.payNote}>
-                  <Smartphone size={16} />
-                  You'll be redirected to Razorpay's secure UPI payment screen.
-                </div>
-              )}
-              {payMethod === 'CARD' && (
-                <div className={styles.payNote}>
-                  <CreditCard size={16} />
-                  You'll be redirected to Razorpay's secure card payment screen.
-                </div>
-              )}
-              {payMethod === 'COD' && (
-                <div className={styles.payNote}>
-                  <Truck size={16} />
-                  Pay ₹{finalTotal.toLocaleString('en-IN')} when your order arrives.
-                </div>
-              )}
+              <div className={styles.payNote}>
+                {payMethod === 'UPI'  && <><Smartphone size={15}/> Redirected to Razorpay secure UPI screen.</>}
+                {payMethod === 'CARD' && <><CreditCard size={15}/> Redirected to Razorpay secure card screen.</>}
+                {payMethod === 'COD'  && <><Truck size={15}/> Pay ₹{finalTotal.toLocaleString('en-IN')} when your order arrives.</>}
+              </div>
 
               <div className={styles.deliverySummary}>
-                <h3>Delivering to</h3>
-                <p>{form.firstName} {form.lastName} · {form.phone}</p>
-                <p>{form.address}, {form.city}, {form.state} - {form.pinCode}</p>
+                <div className={styles.deliverySummaryLabel}>📦 Delivering to</div>
+                <div className={styles.deliverySummaryName}>{form.firstName} {form.lastName} · {form.phone}</div>
+                <div className={styles.deliverySummaryAddr}>{form.address}, {form.city}, {form.state} – {form.pinCode}</div>
               </div>
             </div>
           )}
@@ -295,15 +287,11 @@ export default function Checkout() {
                 <div className={styles.orderId}>Order #{placedOrder.orderNumber}</div>
               )}
               <p className={styles.successNote}>
-                Confirmation details will be sent to <strong>{form.email}</strong>
+                Confirmation will be sent to <strong>{form.email}</strong>
               </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '28px' }}>
-                <button className="btn-primary" onClick={() => navigate('/orders')}>
-                  View Orders
-                </button>
-                <button className="btn-outline" onClick={() => navigate('/')}>
-                  Continue Shopping
-                </button>
+              <div className={styles.successBtns}>
+                <button className="btn-primary" onClick={() => navigate('/orders')}>View Orders</button>
+                <button className="btn-outline" onClick={() => navigate('/')}>Continue Shopping</button>
               </div>
             </div>
           )}
@@ -312,14 +300,10 @@ export default function Checkout() {
           {step < 2 && (
             <div className={styles.navBtns}>
               {step > 0 && (
-                <button className="btn-outline" onClick={() => setStep(s => s - 1)}>
-                  ← Back
-                </button>
+                <button className="btn-outline" onClick={() => setStep(s => s - 1)}>← Back</button>
               )}
               {step < 1 ? (
-                <button className="btn-primary" onClick={handleNext}>
-                  Continue to Payment →
-                </button>
+                <button className="btn-primary" onClick={handleNext}>Continue to Payment →</button>
               ) : (
                 <button className="btn-primary" onClick={handlePlaceOrder} disabled={loading}>
                   {loading ? 'Placing Order...' : payMethod === 'COD' ? 'Place Order' : 'Pay Now →'}
@@ -329,13 +313,11 @@ export default function Checkout() {
           )}
         </div>
 
-        {/* ── RIGHT: Order Summary ── */}
+        {/* RIGHT: Order Summary */}
         {step < 2 && (
           <div className={styles.right}>
             <div className={styles.summary}>
               <h3 className={styles.summaryTitle}>Order Summary</h3>
-
-              {/* Items */}
               <div className={styles.summaryItems}>
                 {cartItems.map(item => (
                   <div key={item.id} className={styles.summaryItem}>
@@ -351,7 +333,6 @@ export default function Checkout() {
                 ))}
               </div>
 
-              {/* ── COUPON CODE ── */}
               <div className={styles.couponBox}>
                 <div className={styles.couponLabel}>🎁 Have a Coupon?</div>
                 {!couponApplied ? (
@@ -363,23 +344,18 @@ export default function Checkout() {
                       placeholder="Enter coupon code"
                       onKeyDown={e => e.key === 'Enter' && applyCoupon()}
                     />
-                    <button type="button" className={styles.couponBtn} onClick={applyCoupon}>
-                      Apply
-                    </button>
+                    <button type="button" className={styles.couponBtn} onClick={applyCoupon}>Apply</button>
                   </div>
                 ) : (
                   <div className={styles.couponSuccess}>
                     <span>✅ <strong>{coupon.toUpperCase()}</strong> — ₹{couponDiscount} off!</span>
-                    <button type="button" className={styles.couponRemove} onClick={removeCoupon}>
-                      Remove
-                    </button>
+                    <button type="button" className={styles.couponRemove} onClick={removeCoupon}>Remove</button>
                   </div>
                 )}
                 {couponError && <div className={styles.couponError}>{couponError}</div>}
                 <div className={styles.couponHint}>Try: AYEZU10 · WELCOME20 · FESTIVE15</div>
               </div>
 
-              {/* ── PRICE BREAKDOWN ── */}
               <div className={styles.summaryCalc}>
                 <div className={styles.calcRow}>
                   <span>Subtotal</span>
@@ -404,7 +380,7 @@ export default function Checkout() {
               </div>
 
               <div className={styles.trustBadges}>
-                <span>🔒 Secure Checkout</span>
+                <span>🔒 Secure</span>
                 <span>🚚 Fast Delivery</span>
                 <span>↩️ Easy Returns</span>
               </div>

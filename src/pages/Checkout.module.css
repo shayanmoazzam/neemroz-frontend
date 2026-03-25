@@ -10,9 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
   margin-bottom: 36px;
-  flex-wrap: nowrap;
 }
 
 .stepDot {
@@ -29,22 +27,21 @@
   justify-content: center;
   flex-shrink: 0;
   transition: all .3s;
-  z-index: 1;
 }
 .stepActive {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
 }
-
 .stepLabel {
   font-size: .72rem;
   font-weight: 500;
   color: var(--earth);
   white-space: nowrap;
   margin: 0 6px;
+  transition: color .3s;
 }
-
+.stepLabelActive { color: var(--accent); font-weight: 600; }
 .stepLine {
   flex: 1;
   height: 2px;
@@ -61,8 +58,7 @@
   gap: 32px;
   align-items: start;
 }
-
-.left { display: flex; flex-direction: column; gap: 0; }
+.left { display: flex; flex-direction: column; }
 
 /* ── FORM BOX ── */
 .formBox {
@@ -70,22 +66,15 @@
   border-radius: 16px;
   padding: 28px;
   box-shadow: var(--shadow);
-  margin-bottom: 0;
 }
-
 .formTitle {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 400;
   color: var(--deep);
-  margin: 0 0 22px;
+  margin: 0 0 24px;
 }
-
-.row {
-  display: flex;
-  gap: 14px;
-}
-
+.row { display: flex; gap: 14px; }
 .field {
   display: flex;
   flex-direction: column;
@@ -94,15 +83,14 @@
   margin-bottom: 16px;
 }
 .field label {
-  font-size: .78rem;
+  font-size: .75rem;
   font-weight: 600;
   color: var(--earth);
   text-transform: uppercase;
   letter-spacing: .06em;
 }
 .field input,
-.field select,
-.field textarea {
+.field select {
   padding: 12px 14px;
   border-radius: 10px;
   border: 1.5px solid var(--sand);
@@ -111,50 +99,51 @@
   color: var(--deep);
   background: #fff;
   outline: none;
-  transition: border-color .2s, box-shadow .2s;
+  transition: border-color .2s;
   width: 100%;
   box-sizing: border-box;
   min-height: 48px;
 }
 .field input:focus,
-.field select:focus,
-.field textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(180,100,60,.1);
-}
-.field textarea { resize: vertical; min-height: 80px; }
+.field select:focus { border-color: var(--accent); }
 
 /* ── PAYMENT METHODS ── */
 .payMethods {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 20px;
 }
-
 .payMethod {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 18px;
-  border-radius: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
   border: 1.5px solid var(--sand);
   background: none;
   cursor: pointer;
   transition: border-color .2s, background .2s;
-  font-size: .9rem;
   font-family: 'DM Sans', sans-serif;
   color: var(--deep);
   font-weight: 500;
-  min-height: 52px;
+  min-height: 60px;
   width: 100%;
   text-align: left;
+  position: relative;
 }
 .payMethod:hover { border-color: var(--accent); }
 .paySelected {
   border-color: var(--accent) !important;
   background: #fdf6ee;
-  color: var(--deep);
+}
+.payIcon { display: flex; align-items: center; color: var(--accent); flex-shrink: 0; }
+.payLabel { flex: 1; font-size: .95rem; }
+.payCheck {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-left: auto;
 }
 
 .payNote {
@@ -167,36 +156,44 @@
   font-size: .84rem;
   color: var(--earth);
   margin-bottom: 20px;
+  line-height: 1.5;
 }
 
+/* Delivery summary on payment step */
 .deliverySummary {
   background: var(--sand);
   border-radius: 12px;
   padding: 16px;
-  margin-top: 10px;
+  margin-top: 4px;
 }
-.deliverySummary h3 {
-  font-size: .78rem;
+.deliverySummaryLabel {
+  font-size: .72rem;
   text-transform: uppercase;
-  letter-spacing: .08em;
-  color: var(--earth);
+  letter-spacing: .1em;
   font-weight: 600;
-  margin: 0 0 8px;
+  color: var(--earth);
+  margin-bottom: 8px;
 }
-.deliverySummary p {
-  font-size: .86rem;
+.deliverySummaryName {
+  font-size: .9rem;
+  font-weight: 600;
   color: var(--deep);
-  margin: 4px 0;
+  margin-bottom: 4px;
+}
+.deliverySummaryAddr {
+  font-size: .84rem;
+  color: var(--earth);
+  line-height: 1.5;
 }
 
 /* ── NAV BUTTONS ── */
 .navBtns {
   display: flex;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 20px;
   justify-content: flex-end;
 }
-.navBtns button { min-height: 50px; padding: 12px 28px; }
+.navBtns button { min-height: 52px; padding: 12px 28px; }
 
 /* ── SUCCESS ── */
 .success {
@@ -214,11 +211,7 @@
   font-weight: 400;
   margin: 0 0 12px;
 }
-.success p {
-  color: var(--earth);
-  font-size: .95rem;
-  margin: 6px 0;
-}
+.success p { color: var(--earth); font-size: .95rem; margin: 6px 0; }
 .orderId {
   display: inline-block;
   margin: 16px 0;
@@ -229,24 +222,24 @@
   font-size: .9rem;
   color: var(--deep);
 }
-.successNote {
-  font-size: .82rem;
-  color: var(--earth);
-  margin-top: 8px;
+.successNote { font-size: .82rem; color: var(--earth); margin-top: 8px; }
+.successBtns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 28px;
+  flex-wrap: wrap;
 }
 
-/* ── RIGHT: ORDER SUMMARY ── */
+/* ── ORDER SUMMARY (RIGHT) ── */
 .right { position: sticky; top: 90px; }
-
 .summary {
   background: var(--white);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow);
-  /* Prevent any child from overflowing the card */
   overflow: hidden;
 }
-
 .summaryTitle {
   font-size: .75rem;
   text-transform: uppercase;
@@ -255,55 +248,32 @@
   color: var(--earth);
   margin: 0 0 16px;
 }
-
 .summaryItems { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-
-/* ✅ KEY FIX: give the row a proper box model so price never clips */
 .summaryItem {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
   box-sizing: border-box;
-  overflow: visible;
 }
 .summaryItem img {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;       /* never shrink the image */
+  width: 52px; height: 52px; min-width: 52px;
   border-radius: 10px;
   object-fit: cover;
   background: var(--sand);
   flex-shrink: 0;
 }
-.summaryItemInfo {
-  flex: 1;
-  min-width: 0;          /* allow text to truncate instead of pushing price out */
-  overflow: hidden;
-}
+.summaryItemInfo { flex: 1; min-width: 0; overflow: hidden; }
 .summaryItemInfo span {
   display: block;
-  font-size: .83rem;
-  font-weight: 500;
-  color: var(--deep);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: .83rem; font-weight: 500; color: var(--deep);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.summaryItemInfo small {
-  font-size: .75rem;
-  color: var(--earth);
-}
-/* ✅ Price: always visible, never shrinks, aligned right */
+.summaryItemInfo small { font-size: .75rem; color: var(--earth); }
 .summaryItemPrice {
-  font-size: .85rem;
-  font-weight: 600;
-  color: var(--deep);
-  flex-shrink: 0;        /* never compress the price */
-  white-space: nowrap;   /* keep ₹3,500 on one line */
-  margin-left: 8px;
-  text-align: right;
-  min-width: 52px;       /* enough room for ₹9,999 */
+  font-size: .85rem; font-weight: 600; color: var(--deep);
+  flex-shrink: 0; white-space: nowrap;
+  margin-left: 8px; text-align: right; min-width: 58px;
 }
 
 /* ── COUPON ── */
@@ -313,169 +283,109 @@
   padding: 14px;
   margin: 14px 0;
 }
-.couponLabel {
-  font-size: .78rem;
-  font-weight: 600;
-  color: var(--deep);
-  margin-bottom: 10px;
-}
-.couponRow {
-  display: flex;
-  gap: 8px;
-}
+.couponLabel { font-size: .78rem; font-weight: 600; color: var(--deep); margin-bottom: 10px; }
+.couponRow { display: flex; gap: 8px; }
 .couponInput {
-  flex: 1;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1.5px solid var(--sand);
-  font-family: 'DM Sans', sans-serif;
-  font-size: .85rem;
-  outline: none;
-  min-height: 40px;
-  box-sizing: border-box;
+  flex: 1; padding: 9px 12px;
+  border-radius: 8px; border: 1.5px solid var(--sand);
+  font-family: 'DM Sans', sans-serif; font-size: .85rem;
+  outline: none; min-height: 42px; box-sizing: border-box;
 }
 .couponInput:focus { border-color: var(--accent); }
 .couponBtn {
-  padding: 9px 16px;
-  border-radius: 8px;
-  border: none;
-  background: var(--deep);
-  color: var(--cream);
-  font-size: .82rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  white-space: nowrap;
+  padding: 9px 16px; border-radius: 8px; border: none;
+  background: var(--deep); color: var(--cream);
+  font-size: .82rem; font-weight: 600; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; white-space: nowrap;
   transition: background .2s;
 }
 .couponBtn:hover { background: var(--accent); }
 .couponSuccess {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: .83rem;
-  color: #166534;
-  background: #f0fdf4;
-  padding: 8px 12px;
-  border-radius: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .83rem; color: #166534;
+  background: #f0fdf4; padding: 8px 12px; border-radius: 8px;
 }
 .couponRemove {
-  background: none;
-  border: none;
-  color: var(--earth);
-  font-size: .78rem;
-  cursor: pointer;
-  text-decoration: underline;
+  background: none; border: none; color: var(--earth);
+  font-size: .78rem; cursor: pointer; text-decoration: underline;
   font-family: 'DM Sans', sans-serif;
 }
-.couponError {
-  font-size: .78rem;
-  color: #dc2626;
-  margin-top: 6px;
-}
-.couponHint {
-  font-size: .72rem;
-  color: var(--earth);
-  margin-top: 8px;
-  opacity: .8;
-}
+.couponError { font-size: .78rem; color: #dc2626; margin-top: 6px; }
+.couponHint { font-size: .72rem; color: var(--earth); margin-top: 8px; opacity: .8; }
 
 /* ── PRICE BREAKDOWN ── */
 .summaryCalc {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
   border-top: 1px solid var(--sand);
   padding-top: 14px;
+  display: flex; flex-direction: column;
 }
 .calcRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: .85rem;
-  color: var(--earth);
-  padding: 6px 0;
+  display: flex; justify-content: space-between;
+  font-size: .85rem; color: var(--earth); padding: 6px 0;
 }
 .calcRow span:last-child { color: var(--deep); font-weight: 500; }
 .discountAmt { color: #2d8a4e !important; font-weight: 600 !important; }
 .calcTotal {
   border-top: 1.5px solid var(--sand);
-  margin-top: 6px;
-  padding-top: 10px;
-  font-size: 1rem !important;
-  font-weight: 700 !important;
-  color: var(--deep) !important;
+  margin-top: 6px; padding-top: 10px;
+  font-size: 1rem !important; font-weight: 700 !important;
 }
 .calcTotal span { color: var(--deep) !important; font-weight: 700 !important; }
 
 .trustBadges {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 16px;
-  padding-top: 14px;
+  display: flex; justify-content: space-around;
+  margin-top: 16px; padding-top: 14px;
   border-top: 1px solid var(--sand);
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: wrap; gap: 6px;
 }
-.trustBadges span {
-  font-size: .75rem;
-  color: var(--earth);
-}
+.trustBadges span { font-size: .73rem; color: var(--earth); }
 
 /* ── MOBILE ── */
 @media (max-width: 768px) {
-  .page { padding: 14px 4% 100px; }
+  .page { padding: 14px 4% 120px; }
 
-  .progressBar { gap: 0; margin-bottom: 24px; }
-  .stepDot { width: 30px; height: 30px; font-size: .75rem; }
-  .stepLabel { font-size: .65rem; margin: 0 4px; }
-  .stepLine { max-width: 40px; }
+  /* Progress bar smaller */
+  .progressBar { margin-bottom: 20px; }
+  .stepDot { width: 28px; height: 28px; font-size: .72rem; }
+  .stepLabel { font-size: .62rem; margin: 0 3px; }
+  .stepLine { max-width: 36px; }
 
-  .content {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+  /* Single column */
+  .content { grid-template-columns: 1fr; gap: 14px; }
 
-  /* Summary on top, form below on mobile */
-  .right {
-    position: static;
-    order: -1;
-  }
+  /* Summary always on top on mobile */
+  .right { position: static; order: -1; }
 
+  /* Form */
+  .formBox { padding: 16px; }
+  .formTitle { font-size: 1.2rem; margin-bottom: 16px; }
   .row { flex-direction: column; gap: 0; }
 
-  .formBox { padding: 18px 16px; }
+  /* Payment buttons — full width, easy to tap */
+  .payMethod {
+    min-height: 56px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: .9rem;
+  }
+  .payLabel { font-size: .9rem; }
 
+  /* Nav buttons — stacked full width */
   .navBtns {
     flex-direction: column-reverse;
     gap: 10px;
+    margin-top: 16px;
   }
-  .navBtns button {
-    width: 100%;
-    min-height: 52px;
-    font-size: 1rem;
-  }
+  .navBtns button { width: 100%; min-height: 54px; font-size: 1rem; }
 
-  .payMethods { gap: 8px; }
-  .payMethod { min-height: 56px; font-size: .88rem; }
+  /* Summary card */
+  .summary { padding: 16px 14px; border-radius: 14px; }
+  .summaryItem img { width: 44px; height: 44px; min-width: 44px; }
+  .summaryItemPrice { font-size: .83rem; min-width: 62px; }
 
-  /* On mobile, give the summary card proper padding so price isn't near edge */
-  .summary {
-    border-radius: 14px;
-    padding: 16px 14px;
-  }
-
-  /* Slightly smaller image on mobile to give price more room */
-  .summaryItem img {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-  }
-
-  .summaryItemPrice {
-    font-size: .83rem;
-    min-width: 58px;   /* slightly wider so ₹13,500 fits fully */
-  }
-
-  .success { padding: 40px 16px; }
+  /* Success page */
+  .success { padding: 36px 16px; }
   .success h2 { font-size: 1.6rem; }
+  .successBtns { flex-direction: column; }
+  .successBtns button { width: 100%; }
 }
