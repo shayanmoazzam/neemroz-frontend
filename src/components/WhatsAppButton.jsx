@@ -1,11 +1,17 @@
 import React, { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import styles from './WhatsAppButton.module.css'
 
-const PHONE = '917001065007' // India (+91) prefix
+const PHONE = '917001065007'
 const DEFAULT_MSG = 'Hi! I found your store and I am interested in your products. Can you help me?'
 
 export default function WhatsAppButton() {
   const [hovered, setHovered] = useState(false)
+  const location = useLocation()
+
+  // Hide on product detail pages — they have their own inline WhatsApp enquiry button
+  const isProductPage = location.pathname.startsWith('/product')
+  if (isProductPage) return null
 
   const url = `https://wa.me/${PHONE}?text=${encodeURIComponent(DEFAULT_MSG)}`
 
