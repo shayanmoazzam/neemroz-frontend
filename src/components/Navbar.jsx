@@ -1,38 +1,89 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, User, Search, Menu, X, LogOut } from 'lucide-react'
+import {
+  ShoppingCart, User, Search, Menu, X,
+  LogOut, Heart, ChevronRight
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import { useWishlist } from '../context/WishlistContext'
+import api from '../api'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
+  const { user, logout }       = useAuth()
   const { cartCount, setCartOpen } = useCart()
-  const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const { wishlist }           = useWishlist()
+  const navigate               = useNavigate()
+
+  const [menuOpen, setMenuOpen]   = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQ, setSearchQ] = useState('')
-  const [dropOpen, setDropOpen] = useState(false)
+  const [searchQ, setSearchQ]     = useState('')
+  const [results, setResults]     = useState([])
+  const [searching, setSearching] = useState(false)
+  const [dropOpen, setDropOpen]   = useState(false)
+  const searchRef                 = useRef(null)
+  const debounceRef               = useRef(null)
+
+  // Live search
+  useEffect(() => {
+    if (!searchQ.trim()) { setResults([]); return }
+    clearTimeout(debounceRef.current)
+    setSearching(true)
+    debounceRef.current = setTimeout(() => {
+      api.get(`/products?search=${encodeURIComponent(searchQ.trim())}`)
+        .then(r => setResults(Array.isArray(r.data) ? r.data.slice(0, 6) : []))
+        .catch(() => setResults([]))
+        .finally(() => setSearching(false))
+    }, 300)
+  }, [searchQ])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setResults([])
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [menuOpen])
 
   const handleSearch = (e) => {
     e.preventDefault()
-    if (searchQ.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchQ.trim())}`)
-      setSearchOpen(false)
-      setSearchQ('')
-    }
+    if (!searchQ.trim()) return
+    navigate(`/shop?search=${encodeURIComponent(searchQ.trim())}`)
+    setSearchOpen(false)
+    setSearchQ('')
+    setResults([])
+  }
+
+  const handleResultClick = (id) => {
+    navigate(`/product/${id}`)
+    setSearchOpen(false)
+    setSearchQ('')
+    setResults([])
   }
 
   const handleLogout = () => {
     logout()
     setDropOpen(false)
+    setMenuOpen(false)
     navigate('/')
   }
+
+  const closeMenu = () => setMenuOpen(false)
 
   return (
     <>
       <div className={styles.topbar}>
-        🚚 Free shipping above ₹799 &nbsp;|&nbsp; Premium Quality &nbsp;|&nbsp; 30-Day Returns
+        🚚 Free shipping above ₹799 &nbsp;|&nbsp; Premium Quality &nbsp;|&nbsp; 7-Day Returns
       </div>
 
       <nav className={styles.nav}>
@@ -46,10 +97,19 @@ export default function Navbar() {
         </ul>
 
         <div className={styles.actions}>
-          <button className={styles.iconBtn} onClick={() => setSearchOpen(s => !s)}>
+
+          {/* Search */}
+          <button className={styles.iconBtn} onClick={() => { setSearchOpen(s => !s); setSearchQ(''); setResults([]) }} title="Search">
             <Search size={19} />
           </button>
 
+          {/* Wishlist */}
+          <Link to="/wishlist" className={styles.iconBtnLink} title="Wishlist">
+            <Heart size={19} />
+            {wishlist.length > 0 && <span className={styles.wishBadge}>{wishlist.length}</span>}
+          </Link>
+
+          {/* User */}
           {user ? (
             <div className={styles.userDrop}>
               <button className={styles.iconBtn} onClick={() => setDropOpen(d => !d)}>
@@ -62,8 +122,16 @@ export default function Navbar() {
                     <small>{user.email}</small>
                   </div>
                   <Link to="/orders" className={styles.dropItem} onClick={() => setDropOpen(false)}>
-                    My Orders
+                    🛍️ My Orders
                   </Link>
+                  <Link to="/wishlist" className={styles.dropItem} onClick={() => setDropOpen(false)}>
+                    ❤️ Wishlist ({wishlist.length})
+                  </Link>
+                  {user.role === 'admin' && (
+                    <Link to="/admin" className={styles.dropItem} onClick={() => setDropOpen(false)}>
+                      ⚙️ Admin Panel
+                    </Link>
+                  )}
                   <button className={styles.dropItem} onClick={handleLogout}>
                     <LogOut size={14} /> Logout
                   </button>
@@ -71,57 +139,146 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <Link to="/login" className={styles.iconBtn}>
+            <Link to="/login" className={styles.iconBtn} title="Login">
               <User size={19} />
             </Link>
           )}
 
+          {/* Cart */}
           <button className={styles.cartBtn} onClick={() => setCartOpen(true)}>
             <ShoppingCart size={17} />
-            Cart
+            <span className={styles.cartLabel}>Cart</span>
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
           </button>
 
-          <button className={styles.menuBtn} onClick={() => setMenuOpen(m => !m)}>
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {/* Hamburger */}
+          <button className={styles.menuBtn} onClick={() => setMenuOpen(m => !m)} aria-label="Menu">
+            <Menu size={22} />
           </button>
         </div>
       </nav>
 
+      {/* ── SEARCH BAR WITH LIVE RESULTS ── */}
       {searchOpen && (
-        <div className={styles.searchBar}>
+        <div className={styles.searchBar} ref={searchRef}>
           <form onSubmit={handleSearch} className={styles.searchForm}>
-            <input
-              autoFocus
-              value={searchQ}
-              onChange={e => setSearchQ(e.target.value)}
-              placeholder="Search bedsheets, kids wear, women wear..."
-              className={styles.searchInput}
-            />
+            <div className={styles.searchInputWrap}>
+              <Search size={16} className={styles.searchIcon} />
+              <input
+                autoFocus
+                value={searchQ}
+                onChange={e => setSearchQ(e.target.value)}
+                placeholder="Search bedsheets, kids wear, women wear..."
+                className={styles.searchInput}
+              />
+              {searchQ && (
+                <button type="button" className={styles.clearBtn} onClick={() => { setSearchQ(''); setResults([]) }}>
+                  <X size={14} />
+                </button>
+              )}
+            </div>
             <button type="submit" className={styles.searchSubmit}>Search</button>
-            <button type="button" onClick={() => setSearchOpen(false)} className={styles.searchClose}>
+            <button type="button" onClick={() => { setSearchOpen(false); setSearchQ(''); setResults([]) }} className={styles.searchClose}>
               <X size={18} />
             </button>
           </form>
-        </div>
-      )}
 
-      {menuOpen && (
-        <div className={styles.mobileMenu}>
-          <Link to="/shop?category=bedsheet" onClick={() => setMenuOpen(false)}>Bed Sheets</Link>
-          <Link to="/shop?category=kids" onClick={() => setMenuOpen(false)}>Kids Wear</Link>
-          <Link to="/shop?category=women" onClick={() => setMenuOpen(false)}>Women Wear</Link>
-          <Link to="/shop" onClick={() => setMenuOpen(false)}>All Products</Link>
-          {user ? (
-            <>
-              <Link to="/orders" onClick={() => setMenuOpen(false)}>My Orders</Link>
-              <button onClick={() => { handleLogout(); setMenuOpen(false) }}>Logout</button>
-            </>
-          ) : (
-            <Link to="/login" onClick={() => setMenuOpen(false)}>Login / Register</Link>
+          {/* Live Results Dropdown */}
+          {(results.length > 0 || searching) && (
+            <div className={styles.searchResults}>
+              {searching && <div className={styles.searchLoading}>Searching...</div>}
+              {!searching && results.map(p => (
+                <div key={p.id} className={styles.searchResult} onClick={() => handleResultClick(p.id)}>
+                  <img src={p.imageUrl} alt={p.name} className={styles.resultImg} />
+                  <div className={styles.resultInfo}>
+                    <div className={styles.resultName}>{p.name}</div>
+                    <div className={styles.resultMeta}>
+                      <span className={styles.resultPrice}>₹{p.price?.toLocaleString('en-IN')}</span>
+                      <span className={styles.resultCat}>{p.category}</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={14} className={styles.resultArrow} />
+                </div>
+              ))}
+              {!searching && results.length > 0 && (
+                <button className={styles.searchAllBtn} onClick={handleSearch}>
+                  View all results for "{searchQ}" →
+                </button>
+              )}
+              {!searching && results.length === 0 && searchQ && (
+                <div className={styles.noResults}>No products found for "{searchQ}"</div>
+              )}
+            </div>
           )}
         </div>
       )}
+
+      {/* ── MOBILE MENU OVERLAY ── */}
+      {menuOpen && <div className={styles.menuOverlay} onClick={closeMenu} />}
+
+      {/* ── MOBILE DRAWER ── */}
+      <div className={`${styles.mobileDrawer} ${menuOpen ? styles.drawerOpen : ''}`}>
+        <div className={styles.drawerHeader}>
+          <span className={styles.drawerLogo}>Ayezu <span>Collection</span></span>
+          <button className={styles.drawerClose} onClick={closeMenu}><X size={22} /></button>
+        </div>
+
+        {user && (
+          <div className={styles.drawerUser}>
+            <div className={styles.drawerAvatar}>{user.firstName?.[0]}</div>
+            <div>
+              <div className={styles.drawerName}>{user.firstName} {user.lastName}</div>
+              <div className={styles.drawerEmail}>{user.email}</div>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.drawerSection}>
+          <div className={styles.drawerSectionTitle}>Shop</div>
+          <Link to="/shop?category=bedsheet" className={styles.drawerLink} onClick={closeMenu}>🛏️ Bed Sheets</Link>
+          <Link to="/shop?category=kids"     className={styles.drawerLink} onClick={closeMenu}>👗 Kids Wear</Link>
+          <Link to="/shop?category=women"    className={styles.drawerLink} onClick={closeMenu}>✨ Women Wear</Link>
+          <Link to="/shop"                   className={styles.drawerLink} onClick={closeMenu}>🛍️ All Products</Link>
+        </div>
+
+        <div className={styles.drawerSection}>
+          <div className={styles.drawerSectionTitle}>Account</div>
+          {user ? (
+            <>
+              <Link to="/orders"  className={styles.drawerLink} onClick={closeMenu}>📦 My Orders</Link>
+              <Link to="/wishlist" className={styles.drawerLink} onClick={closeMenu}>
+                ❤️ Wishlist {wishlist.length > 0 && <span className={styles.drawerBadge}>{wishlist.length}</span>}
+              </Link>
+              {user.role === 'admin' && (
+                <Link to="/admin" className={styles.drawerLink} onClick={closeMenu}>⚙️ Admin Panel</Link>
+              )}
+              <button className={styles.drawerLogout} onClick={handleLogout}>
+                <LogOut size={15} /> Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login"    className={styles.drawerLink} onClick={closeMenu}>🔑 Login</Link>
+              <Link to="/register" className={styles.drawerLink} onClick={closeMenu}>📝 Register</Link>
+            </>
+          )}
+        </div>
+
+        <div className={styles.drawerSection}>
+          <div className={styles.drawerSectionTitle}>Help</div>
+          <Link to="/faqs"            className={styles.drawerLink} onClick={closeMenu}>❓ FAQs</Link>
+          <Link to="/shipping-info"   className={styles.drawerLink} onClick={closeMenu}>🚚 Shipping Info</Link>
+          <Link to="/returns-refunds" className={styles.drawerLink} onClick={closeMenu}>🔄 Returns & Refunds</Link>
+          <Link to="/track-order"     className={styles.drawerLink} onClick={closeMenu}>📍 Track Order</Link>
+        </div>
+
+        <div className={styles.drawerFooter}>
+          <button className={styles.drawerCartBtn} onClick={() => { setCartOpen(true); closeMenu() }}>
+            <ShoppingCart size={17} />
+            View Cart {cartCount > 0 && `(${cartCount})`}
+          </button>
+        </div>
+      </div>
     </>
   )
 }
