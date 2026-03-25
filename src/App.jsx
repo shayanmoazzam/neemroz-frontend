@@ -8,6 +8,7 @@ import Navbar from './components/Navbar'
 import CartSidebar from './components/CartSidebar'
 import ScrollToTop from './components/ScrollToTop'
 import Footer from './components/Footer'
+import WhatsAppButton from './components/WhatsAppButton'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import Login from './pages/Login'
@@ -66,6 +67,7 @@ export default function App() {
                     <Route path="/track-order"     element={<TrackOrder />} />
                   </Routes>
                   <Footer />
+                  <WhatsAppButton />
                 </>
               } />
             </Routes>

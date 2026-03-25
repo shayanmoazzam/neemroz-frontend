@@ -1,0 +1,213 @@
+.hero {
+  position: relative;
+  height: 88vh;
+  min-height: 520px;
+  max-height: 860px;
+  overflow: hidden;
+  background: var(--deep);
+}
+
+/* ── SLIDES ── */
+.slide {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity .7s ease, transform 5s ease;
+}
+.slideActive {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── OVERLAY ── */
+.overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(26,16,8,.72) 0%,
+    rgba(26,16,8,.3) 50%,
+    rgba(26,16,8,.1) 100%
+  );
+  z-index: 1;
+}
+.overlayDark {
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,.35) 0%,
+    rgba(0,0,0,.65) 100%
+  );
+}
+
+/* ── CONTENT ── */
+.content {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 560px;
+  animation: slideUp .7s ease forwards;
+}
+.align_left   { left: 8%; }
+.align_center { left: 50%; transform: translate(-50%, -50%); text-align: center; }
+.align_right  { right: 8%; text-align: right; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(calc(-50% + 28px)); }
+  to   { opacity: 1; transform: translateY(-50%); }
+}
+/* Center alignment fix for animation */
+.align_center {
+  animation: slideUpCenter .7s ease forwards;
+}
+@keyframes slideUpCenter {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 28px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.eyebrow {
+  font-size: .72rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--clay);
+  font-weight: 600;
+  margin-bottom: 14px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  font-size: clamp(.88rem, 1.5vw, 1rem);
+  color: rgba(255,255,255,.82);
+  line-height: 1.6;
+  margin-bottom: 32px;
+  max-width: 420px;
+}
+
+.ctaRow { display: flex; gap: 14px; flex-wrap: wrap; }
+.align_center .ctaRow { justify-content: center; }
+.align_right  .ctaRow { justify-content: flex-end; }
+
+.ctaBtn {
+  padding: 14px 32px;
+  background: var(--accent);
+  color: #fff; border: none;
+  border-radius: 50px;
+  font-size: .9rem; font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; transition: all .25s;
+  letter-spacing: .02em;
+}
+.ctaBtn:hover { background: var(--clay); transform: translateY(-2px); }
+
+.ctaOutline {
+  padding: 14px 32px;
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,.6);
+  border-radius: 50px;
+  font-size: .9rem; font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; transition: all .25s;
+}
+.ctaOutline:hover {
+  background: rgba(255,255,255,.15);
+  border-color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ── ARROWS ── */
+.arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 3;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,.18);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s;
+}
+.arrow:hover { background: rgba(255,255,255,.32); transform: translateY(-50%) scale(1.08); }
+.arrowLeft  { left: 24px; }
+.arrowRight { right: 24px; }
+
+/* ── DOTS ── */
+.dots {
+  position: absolute; bottom: 32px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex; gap: 8px;
+}
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,.45);
+  border: none; cursor: pointer; padding: 0;
+  transition: all .3s;
+}
+.dotActive {
+  background: #fff;
+  width: 28px;
+  border-radius: 50px;
+}
+
+/* ── PROGRESS BAR ── */
+.progress {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: rgba(255,255,255,.15);
+  z-index: 3;
+}
+.progressBar {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  animation: progress 5s linear forwards;
+}
+@keyframes progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .hero { height: 70vh; min-height: 420px; }
+  .content { max-width: 90%; }
+  .align_right { right: 5%; }
+  .align_left  { left: 5%; }
+  .arrow { width: 38px; height: 38px; }
+  .arrowLeft  { left: 12px; }
+  .arrowRight { right: 12px; }
+}
+@media (max-width: 480px) {
+  .title { font-size: 2rem; }
+  .ctaBtn, .ctaOutline { padding: 12px 22px; font-size: .84rem; }
+}
+
+
+/* Hide inactive slide content */
+.contentHidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Show & animate active slide content */
+.contentActive {
+  opacity: 1;
+  visibility: visible;
+  animation: slideUp .7s ease forwards;
+}
+
+/* Fix center alignment animation separately */
+.align_center.contentActive {
+  animation: slideUpCenter .7s ease forwards;
+}

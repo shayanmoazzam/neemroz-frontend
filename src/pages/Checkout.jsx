@@ -15,15 +15,27 @@ const PAY_METHODS = [
   { key: 'COD',  label: 'Cash on Delivery', icon: <Truck size={20}/> },
 ]
 
+const COUPONS = {
+  'AYEZU10':   10,
+  'WELCOME20': 20,
+  'FESTIVE15': 15,
+}
+
 export default function Checkout() {
   const { cartItems, cartTotal, shipping, grandTotal, clearCart } = useCart()
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [step, setStep]           = useState(0)
-  const [payMethod, setPayMethod] = useState('UPI')
-  const [loading, setLoading]     = useState(false)
+  const [step, setStep]             = useState(0)
+  const [payMethod, setPayMethod]   = useState('UPI')
+  const [loading, setLoading]       = useState(false)
   const [placedOrder, setPlacedOrder] = useState(null)
+
+  // Coupon state
+  const [coupon, setCoupon]                 = useState('')
+  const [couponApplied, setCouponApplied]   = useState(false)
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [couponError, setCouponError]       = useState('')
 
   const [form, setForm] = useState({
     firstName: user?.firstName || '',
@@ -38,13 +50,40 @@ export default function Checkout() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
+  // Coupon logic
+  const applyCoupon = () => {
+    const code = coupon.trim().toUpperCase()
+    if (COUPONS[code]) {
+      const disc = Math.round((cartTotal * COUPONS[code]) / 100)
+      setCouponDiscount(disc)
+      setCouponApplied(true)
+      setCouponError('')
+      toast.success(`Coupon applied! ₹${disc} off 🎉`)
+    } else {
+      setCouponError('Invalid coupon code')
+      setCouponDiscount(0)
+      setCouponApplied(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setCoupon('')
+    setCouponApplied(false)
+    setCouponDiscount(0)
+    setCouponError('')
+  }
+
+  const discountedTotal  = cartTotal - couponDiscount
+  const discountedShip   = discountedTotal >= 799 ? 0 : 79
+  const finalTotal       = discountedTotal + discountedShip
+
   const validateStep0 = () => {
     const { firstName, lastName, phone, address, city, pinCode } = form
     if (!firstName || !lastName || !phone || !address || !city || !pinCode) {
       toast.error('Please fill all required fields')
       return false
     }
-    if (!/^\d{10}$/.test(phone)) { toast.error('Enter a valid 10-digit phone number'); return false }
+    if (!/^\d{10}$/.test(phone))  { toast.error('Enter a valid 10-digit phone number'); return false }
     if (!/^\d{6}$/.test(pinCode)) { toast.error('Enter a valid 6-digit PIN code'); return false }
     return true
   }
@@ -59,13 +98,13 @@ export default function Checkout() {
       key: import.meta.env.VITE_RAZORPAY_KEY,
       amount: amount * 100,
       currency: 'INR',
-      name: 'Neemroz',
+      name: 'Ayezu Collection',
       description: 'Premium Home Linen',
       order_id: razorpayOrderId,
       handler: async (response) => {
         try {
           await api.post('/payment/verify', {
-            razorpayOrderId:  response.razorpay_order_id,
+            razorpayOrderId:   response.razorpay_order_id,
             razorpayPaymentId: response.razorpay_payment_id,
             razorpaySignature: response.razorpay_signature,
           })
@@ -76,8 +115,8 @@ export default function Checkout() {
         }
       },
       prefill: {
-        name:  `${form.firstName} ${form.lastName}`,
-        email: form.email,
+        name:    `${form.firstName} ${form.lastName}`,
+        email:   form.email,
         contact: form.phone,
       },
       theme: { color: '#3D2B1F' },
@@ -89,7 +128,6 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     setLoading(true)
     try {
-      // 1. Place order in DB
       const orderRes = await api.post('/orders', {
         paymentMethod:   payMethod,
         shippingName:    `${form.firstName} ${form.lastName}`,
@@ -98,6 +136,8 @@ export default function Checkout() {
         shippingCity:    form.city,
         shippingState:   form.state,
         shippingPinCode: form.pinCode,
+        couponCode:      couponApplied ? coupon.trim().toUpperCase() : null,
+        couponDiscount,
       })
 
       const order = orderRes.data
@@ -107,7 +147,6 @@ export default function Checkout() {
         setStep(2)
         clearCart()
       } else {
-        // 2. Create Razorpay order
         const payRes = await api.post('/payment/create', { orderId: order.id })
         initiateRazorpay(order.id, payRes.data.razorpayOrderId, payRes.data.amount)
       }
@@ -133,7 +172,8 @@ export default function Checkout() {
 
   return (
     <div className={styles.page}>
-      {/* Progress bar */}
+
+      {/* ── PROGRESS BAR ── */}
       <div className={styles.progressBar}>
         {STEPS.map((s, i) => (
           <React.Fragment key={s}>
@@ -149,8 +189,10 @@ export default function Checkout() {
       </div>
 
       <div className={styles.content}>
-        {/* LEFT: Form */}
+
+        {/* ── LEFT: Form ── */}
         <div className={styles.left}>
+
           {/* Step 0: Delivery */}
           {step === 0 && (
             <div className={styles.formBox}>
@@ -230,11 +272,10 @@ export default function Checkout() {
               {payMethod === 'COD' && (
                 <div className={styles.payNote}>
                   <Truck size={16} />
-                  Pay ₹{grandTotal.toLocaleString('en-IN')} when your order arrives. Available for orders up to ₹5,000.
+                  Pay ₹{finalTotal.toLocaleString('en-IN')} when your order arrives.
                 </div>
               )}
 
-              {/* Delivery summary */}
               <div className={styles.deliverySummary}>
                 <h3>Delivering to</h3>
                 <p>{form.firstName} {form.lastName} · {form.phone}</p>
@@ -248,7 +289,7 @@ export default function Checkout() {
             <div className={styles.success}>
               <div className={styles.successIcon}>🎉</div>
               <h2>Order Placed!</h2>
-              <p>Thank you for shopping with <strong>Neemroz</strong>!</p>
+              <p>Thank you for shopping with <strong>Ayezu Collection</strong>!</p>
               <p>Your order will be delivered within <strong>3–5 business days</strong>.</p>
               {placedOrder && (
                 <div className={styles.orderId}>Order #{placedOrder.orderNumber}</div>
@@ -288,11 +329,13 @@ export default function Checkout() {
           )}
         </div>
 
-        {/* RIGHT: Order summary */}
+        {/* ── RIGHT: Order Summary ── */}
         {step < 2 && (
           <div className={styles.right}>
             <div className={styles.summary}>
               <h3 className={styles.summaryTitle}>Order Summary</h3>
+
+              {/* Items */}
               <div className={styles.summaryItems}>
                 {cartItems.map(item => (
                   <div key={item.id} className={styles.summaryItem}>
@@ -307,19 +350,59 @@ export default function Checkout() {
                   </div>
                 ))}
               </div>
+
+              {/* ── COUPON CODE ── */}
+              <div className={styles.couponBox}>
+                <div className={styles.couponLabel}>🎁 Have a Coupon?</div>
+                {!couponApplied ? (
+                  <div className={styles.couponRow}>
+                    <input
+                      className={styles.couponInput}
+                      value={coupon}
+                      onChange={e => { setCoupon(e.target.value); setCouponError('') }}
+                      placeholder="Enter coupon code"
+                      onKeyDown={e => e.key === 'Enter' && applyCoupon()}
+                    />
+                    <button type="button" className={styles.couponBtn} onClick={applyCoupon}>
+                      Apply
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.couponSuccess}>
+                    <span>✅ <strong>{coupon.toUpperCase()}</strong> — ₹{couponDiscount} off!</span>
+                    <button type="button" className={styles.couponRemove} onClick={removeCoupon}>
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {couponError && <div className={styles.couponError}>{couponError}</div>}
+                <div className={styles.couponHint}>Try: AYEZU10 · WELCOME20 · FESTIVE15</div>
+              </div>
+
+              {/* ── PRICE BREAKDOWN ── */}
               <div className={styles.summaryCalc}>
-                <div className={styles.calcRow}><span>Subtotal</span><span>₹{cartTotal.toLocaleString('en-IN')}</span></div>
+                <div className={styles.calcRow}>
+                  <span>Subtotal</span>
+                  <span>₹{cartTotal.toLocaleString('en-IN')}</span>
+                </div>
+                {couponDiscount > 0 && (
+                  <div className={styles.calcRow}>
+                    <span>Coupon Discount</span>
+                    <span className={styles.discountAmt}>− ₹{couponDiscount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className={styles.calcRow}>
                   <span>Shipping</span>
-                  <span style={{ color: shipping === 0 ? 'var(--success)' : 'inherit' }}>
-                    {shipping === 0 ? 'FREE' : `₹${shipping}`}
+                  <span style={{ color: discountedShip === 0 ? '#2d8a4e' : 'inherit' }}>
+                    {discountedShip === 0 ? 'FREE' : `₹${discountedShip}`}
                   </span>
                 </div>
                 <div className={`${styles.calcRow} ${styles.calcTotal}`}>
                   <span>Total</span>
-                  <span>₹{grandTotal.toLocaleString('en-IN')}</span>
+                  <span>₹{finalTotal.toLocaleString('en-IN')}</span>
                 </div>
               </div>
+
               <div className={styles.trustBadges}>
                 <span>🔒 Secure Checkout</span>
                 <span>🚚 Fast Delivery</span>

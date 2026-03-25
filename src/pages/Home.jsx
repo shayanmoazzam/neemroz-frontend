@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, Shield, Truck, RefreshCw, Leaf, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Star, Shield, Truck, RefreshCw, Leaf, ArrowRight } from 'lucide-react'
 import api from '../api'
 import ProductCard from '../components/ProductCard'
+import HeroCarousel from '../components/HeroCarousel'
 import styles from './Home.module.css'
 
 const CATEGORIES = [
@@ -23,15 +24,13 @@ const WHY = [
 ]
 
 const REVIEWS = [
-  { name: 'Priya Sharma',    loc: 'Mumbai',     stars: 5, text: 'Absolutely love the quality! The embroidery is stunning and the fabric is so soft. Will definitely order again!' },
-  { name: 'Rahul Verma',     loc: 'Pune',       stars: 5, text: 'Ordered the crimson bed set and it completely transformed our bedroom. Delivery was super fast too!' },
-  { name: 'Anjali Mehta',    loc: 'Bangalore',  stars: 5, text: 'Ayezu Collection is my go-to for home linen. Great value and the designs are always fresh and elegant!' },
-  { name: 'Fatima Sheikh',   loc: 'Hyderabad',  stars: 5, text: 'The kids wear is absolutely gorgeous. My daughter loved her outfit for Eid. Premium quality at great price!' },
-  { name: 'Deepika Nair',    loc: 'Chennai',    stars: 4, text: 'Beautiful bedsheets. The embroidery work is so detailed and intricate. Very happy with my purchase!' },
-  { name: 'Arjun Kapoor',    loc: 'Delhi',      stars: 5, text: 'Packaging was excellent and product quality exceeded expectations. Highly recommend Ayezu Collection!' },
+  { name: 'Priya Sharma',  loc: 'Mumbai',    stars: 5, text: 'Absolutely love the quality! The embroidery is stunning and the fabric is so soft. Will definitely order again!' },
+  { name: 'Rahul Verma',   loc: 'Pune',      stars: 5, text: 'Ordered the crimson bed set and it completely transformed our bedroom. Delivery was super fast too!' },
+  { name: 'Anjali Mehta',  loc: 'Bangalore', stars: 5, text: 'Ayezu Collection is my go-to for home linen. Great value and the designs are always fresh and elegant!' },
+  { name: 'Fatima Sheikh', loc: 'Hyderabad', stars: 5, text: 'The kids wear is absolutely gorgeous. My daughter loved her outfit for Eid. Premium quality at great price!' },
+  { name: 'Deepika Nair',  loc: 'Chennai',   stars: 4, text: 'Beautiful bedsheets. The embroidery work is so detailed and intricate. Very happy with my purchase!' },
+  { name: 'Arjun Kapoor',  loc: 'Delhi',     stars: 5, text: 'Packaging was excellent and product quality exceeded expectations. Highly recommend Ayezu Collection!' },
 ]
-
-const HERO_WORDS = ['Bedsheets', 'Kids Wear', 'Women Wear', 'Home Linen']
 
 const MARQUEE_ITEMS = [
   '🚚 Free Shipping above ₹799',
@@ -45,19 +44,12 @@ const MARQUEE_ITEMS = [
 ]
 
 export default function Home() {
-  const [products, setProducts]       = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [wordIdx, setWordIdx]         = useState(0)
-  const [reviewIdx, setReviewIdx]     = useState(0)
-  const [visible, setVisible]         = useState({})
-  const navigate = useNavigate()
+  const [products, setProducts]   = useState([])
+  const [loading, setLoading]     = useState(true)
+  const [reviewIdx, setReviewIdx] = useState(0)
+  const [visible, setVisible]     = useState({})
+  const navigate    = useNavigate()
   const sectionRefs = useRef({})
-
-  // Typewriter word rotator
-  useEffect(() => {
-    const t = setInterval(() => setWordIdx(i => (i + 1) % HERO_WORDS.length), 2500)
-    return () => clearInterval(t)
-  }, [])
 
   // Review auto-slide
   useEffect(() => {
@@ -89,82 +81,13 @@ export default function Home() {
   const bedsheets = products.filter(p => p.category === 'bedsheet')
   const kidsWear  = products.filter(p => p.category === 'kids')
   const womenWear = products.filter(p => p.category === 'women')
-
   const reviewPage = REVIEWS.slice(reviewIdx * 3, reviewIdx * 3 + 3)
 
   return (
     <div className={styles.page}>
 
-      {/* ── PROMO BANNER ── */}
-      <div className={styles.promoBanner}>
-        🎉 Grand Sale — Up to <strong>22% OFF</strong> on all Bedsheets! &nbsp;
-        <span className={styles.promoLink} onClick={() => navigate('/shop?category=bedsheet')}>
-          Shop Now →
-        </span>
-      </div>
-
-      {/* ── HERO ── */}
-      <section className={styles.hero}>
-        <div className={styles.heroLeft}>
-          <div className={styles.eyebrow}>
-            <span className={styles.eyebrowDot}></span>
-            Premium Collection Since 2020
-          </div>
-          <h1 className={styles.h1}>
-            Style That Speaks,<br/>
-            <em>Quality That Lasts</em>
-          </h1>
-          <div className={styles.heroRotator}>
-            Shop Premium{' '}
-            <span className={styles.rotatorWord} key={wordIdx}>
-              {HERO_WORDS[wordIdx]}
-            </span>
-          </div>
-          <p className={styles.heroSub}>
-            Discover our exclusive range of premium bedsheets, kids wear and women wear —
-            crafted with love and delivered to your doorstep.
-          </p>
-          <div className={styles.heroBtns}>
-            <button className="btn-primary" onClick={() => navigate('/shop')}>
-              Shop Now &nbsp;<ArrowRight size={16} />
-            </button>
-            <button className="btn-outline" onClick={() => document.getElementById('categories').scrollIntoView({ behavior: 'smooth' })}>
-              Explore Collections
-            </button>
-          </div>
-          <div className={styles.heroTrust}>
-            <div className={styles.heroAvatars}>
-              {['P','R','A','F'].map((l,i) => (
-                <div key={i} className={styles.heroAvatar} style={{ background: ['#8B0000','#C4622D','#5C3317','#0A1172'][i] }}>{l}</div>
-              ))}
-            </div>
-            <div>
-              <div className={styles.heroTrustStars}>★★★★★</div>
-              <div className={styles.heroTrustText}>5,000+ happy families</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.heroRight}>
-          <div className={styles.imgGrid}>
-            {[
-              'https://www.ayezu.com/images/products/new-21.jpg',
-              'https://www.ayezu.com/images/products/new-1.jpg',
-              'https://www.ayezu.com/images/products/new-15.jpg',
-              'https://www.ayezu.com/images/products/new-18.jpg',
-            ].map((src, i) => (
-              <div key={i} className={`${styles.imgCell} ${styles[`imgCell${i}`]}`}>
-                <img src={src} alt="collection" loading="lazy" />
-              </div>
-            ))}
-          </div>
-          <div className={styles.heroBadge}>
-            <strong>4.8 ★</strong>
-            Trusted by 5,000+ families
-          </div>
-          <div className={styles.heroSaleBadge}>🔥 Sale Live!</div>
-        </div>
-      </section>
+      {/* ── HERO CAROUSEL (replaces old hero) ── */}
+      <HeroCarousel />
 
       {/* ── MARQUEE ── */}
       <div className={styles.marqueeWrap}>
@@ -176,9 +99,7 @@ export default function Home() {
       </div>
 
       {/* ── STATS ── */}
-      <div className={styles.stats}
-        data-reveal="stats" ref={ref('stats')}
-      >
+      <div className={styles.stats} data-reveal="stats" ref={ref('stats')}>
         {[
           ['5K+',  'Happy Customers', '👨‍👩‍👧'],
           ['500+', 'Products',         '🛍️'],
@@ -237,11 +158,14 @@ export default function Home() {
           <h2 className="section-title">Featured <em>Bed Sheets</em></h2>
           <div className="divider" />
         </div>
-        {loading ? <div className={styles.shimmerGrid}>{[...Array(4)].map((_,i) => <div key={i} className={styles.shimmerCard}/>)}</div> : (
-          <div className={`${styles.productGrid} ${visible.beds ? styles.revealed : ''}`}>
-            {bedsheets.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        )}
+        {loading
+          ? <div className={styles.shimmerGrid}>{[...Array(4)].map((_,i) => <div key={i} className={styles.shimmerCard}/>)}</div>
+          : (
+            <div className={`${styles.productGrid} ${visible.beds ? styles.revealed : ''}`}>
+              {bedsheets.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
+            </div>
+          )
+        }
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <button className="btn-outline" onClick={() => navigate('/shop?category=bedsheet')}>
             View All Bed Sheets &nbsp;<ArrowRight size={15} />
@@ -255,7 +179,7 @@ export default function Home() {
           <div className={styles.offerLeft}>
             <div className={styles.offerTag}>LIMITED TIME</div>
             <h3>Get <span>FREE Shipping</span> on orders above ₹799</h3>
-            <p>Use code <strong>AYEZU799</strong> at checkout for extra 5% off</p>
+            <p>Use code <strong>AYEZU10</strong> at checkout for extra 10% off</p>
           </div>
           <button className={styles.offerBtn} onClick={() => navigate('/shop')}>
             Grab the Deal →
@@ -272,11 +196,14 @@ export default function Home() {
           <h2 className="section-title">Kids <em>Wear</em></h2>
           <div className="divider" />
         </div>
-        {loading ? <div className={styles.shimmerGrid}>{[...Array(4)].map((_,i) => <div key={i} className={styles.shimmerCard}/>)}</div> : (
-          <div className={`${styles.productGrid} ${visible.kids ? styles.revealed : ''}`}>
-            {kidsWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        )}
+        {loading
+          ? <div className={styles.shimmerGrid}>{[...Array(4)].map((_,i) => <div key={i} className={styles.shimmerCard}/>)}</div>
+          : (
+            <div className={`${styles.productGrid} ${visible.kids ? styles.revealed : ''}`}>
+              {kidsWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
+            </div>
+          )
+        }
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <button className="btn-outline" onClick={() => navigate('/shop?category=kids')}>
             View All Kids Wear &nbsp;<ArrowRight size={15} />
@@ -293,11 +220,14 @@ export default function Home() {
           <h2 className="section-title">Women <em>Wear</em></h2>
           <div className="divider" />
         </div>
-        {loading ? <div className={styles.shimmerGrid}>{[...Array(4)].map((_,i) => <div key={i} className={styles.shimmerCard}/>)}</div> : (
-          <div className={`${styles.productGrid} ${visible.women ? styles.revealed : ''}`}>
-            {womenWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        )}
+        {loading
+          ? <div className={styles.shimmerGrid}>{[...Array(4)].map((_,i) => <div key={i} className={styles.shimmerCard}/>)}</div>
+          : (
+            <div className={`${styles.productGrid} ${visible.women ? styles.revealed : ''}`}>
+              {womenWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
+            </div>
+          )
+        }
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <button className="btn-outline" onClick={() => navigate('/shop?category=women')}>
             View All Women Wear &nbsp;<ArrowRight size={15} />

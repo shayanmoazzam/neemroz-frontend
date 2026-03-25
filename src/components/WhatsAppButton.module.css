@@ -1,0 +1,77 @@
+.btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  width: 58px;
+  height: 58px;
+  background: #25D366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,211,102,.45);
+  transition: transform .25s, box-shadow .25s;
+  text-decoration: none;
+}
+.btn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 6px 28px rgba(37,211,102,.6);
+}
+
+.icon {
+  width: 30px;
+  height: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.tooltip {
+  position: absolute;
+  right: 68px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: .78rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 50px;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18);
+  animation: fadeIn .2s ease;
+  pointer-events: none;
+}
+.tooltip::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right: none;
+  border-left-color: #1a1a1a;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Pulse ring animation */
+.pulse {
+  position: absolute;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: #25D366;
+  opacity: .4;
+  animation: pulse 2s ease-out infinite;
+  z-index: 0;
+}
+@keyframes pulse {
+  0%   { transform: scale(1); opacity: .4; }
+  70%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@media (max-width: 600px) {
+  .btn { bottom: 20px; right: 16px; width: 52px; height: 52px; }
+}
