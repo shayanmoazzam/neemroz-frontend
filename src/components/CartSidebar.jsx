@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { X, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -10,6 +10,35 @@ export default function CartSidebar() {
           updateQuantity, removeFromCart } = useCart()
   const { user } = useAuth()
   const navigate = useNavigate()
+
+  // Lock body scroll when cart is open
+  useEffect(() => {
+    if (cartOpen) {
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.left = '0'
+      document.body.style.right = '0'
+      document.body.style.overflowY = 'scroll'
+    } else {
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.overflowY = ''
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      }
+    }
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.overflowY = ''
+    }
+  }, [cartOpen])
 
   const handleCheckout = () => {
     setCartOpen(false)
