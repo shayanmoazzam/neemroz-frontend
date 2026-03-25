@@ -7,11 +7,11 @@ import styles from './Home.module.css'
 
 const CATEGORIES = [
   { key: 'bedsheet', label: 'Bed Sheets',  desc: 'Premium Embroidered Collections',
-    img: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80' },
+    img: 'https://www.ayezu.com/images/products/new-21.jpg' },
   { key: 'kids',     label: 'Kids Wear',   desc: 'Kurtas, Gharara & More',
-    img: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=600&q=80' },
+    img: 'https://www.ayezu.com/images/products/new-15.jpg' },
   { key: 'women',    label: 'Women Wear',  desc: 'Gharara, Suits & More',
-    img: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=600&q=80' },
+    img: 'https://www.ayezu.com/images/products/new-18.jpg' },
 ]
 
 const WHY = [
@@ -34,7 +34,10 @@ export default function Home() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    api.get('/products').then(r => setProducts(Array.isArray(r.data) ? r.data : [])).catch(() => setProducts([])).finally(() => setLoading(false))
+    api.get('/products')
+      .then(r => setProducts(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false))
   }, [])
 
   const bedsheets = products.filter(p => p.category === 'bedsheet')
@@ -43,6 +46,7 @@ export default function Home() {
 
   return (
     <div>
+
       {/* ── HERO ── */}
       <section className={styles.hero}>
         <div className={styles.heroLeft}>
@@ -58,18 +62,19 @@ export default function Home() {
             <button className="btn-primary" onClick={() => navigate('/shop')}>
               Shop Now
             </button>
-            <button className="btn-outline" onClick={() => document.getElementById('categories').scrollIntoView({behavior:'smooth'})}>
+            <button className="btn-outline" onClick={() => document.getElementById('categories').scrollIntoView({ behavior: 'smooth' })}>
               Explore Collections
             </button>
           </div>
         </div>
+
         <div className={styles.heroRight}>
           <div className={styles.imgGrid}>
             {[
-              'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=80',
-              'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=500&q=80',
-              'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500&q=80',
-              'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=500&q=80',
+              'https://www.ayezu.com/images/products/new-21.jpg',
+              'https://www.ayezu.com/images/products/new-1.jpg',
+              'https://www.ayezu.com/images/products/new-15.jpg',
+              'https://www.ayezu.com/images/products/new-18.jpg',
             ].map((src, i) => (
               <div key={i} className={styles.imgCell}>
                 <img src={src} alt="collection" loading="lazy" />
@@ -85,14 +90,17 @@ export default function Home() {
 
       {/* ── STATS ── */}
       <div className={styles.stats}>
-        {[['5K+','Happy Customers'],['500+','Products'],['100%','Pure Cotton'],['4.8★','Avg. Rating']].map(
-          ([num, label]) => (
-            <div key={label} className={styles.stat}>
-              <div className={styles.statNum}>{num}</div>
-              <div className={styles.statLabel}>{label}</div>
-            </div>
-          )
-        )}
+        {[
+          ['5K+', 'Happy Customers'],
+          ['500+', 'Products'],
+          ['100%', 'Pure Cotton'],
+          ['4.8★', 'Avg. Rating'],
+        ].map(([num, label]) => (
+          <div key={label} className={styles.stat}>
+            <div className={styles.statNum}>{num}</div>
+            <div className={styles.statLabel}>{label}</div>
+          </div>
+        ))}
       </div>
 
       {/* ── CATEGORIES ── */}
@@ -108,13 +116,22 @@ export default function Home() {
               key={cat.key}
               className={styles.catCard}
               onClick={() => navigate(`/shop?category=${cat.key}`)}
+              style={{ cursor: 'pointer' }}
             >
               <img src={cat.img} alt={cat.label} loading="lazy" />
               <div className={styles.catOverlay} />
               <div className={styles.catInfo}>
                 <div className={styles.catName}>{cat.label}</div>
                 <div className={styles.catCount}>{cat.desc}</div>
-                <button className={styles.catBtn}>Shop Now →</button>
+                <button
+                  className={styles.catBtn}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(`/shop?category=${cat.key}`)
+                  }}
+                >
+                  Shop Now →
+                </button>
               </div>
             </div>
           ))}
@@ -135,7 +152,7 @@ export default function Home() {
             {bedsheets.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
-        <div style={{textAlign:'center', marginTop:'40px'}}>
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <button className="btn-outline" onClick={() => navigate('/shop?category=bedsheet')}>
             View All Bed Sheets
           </button>
@@ -156,7 +173,7 @@ export default function Home() {
             {kidsWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
-        <div style={{textAlign:'center', marginTop:'40px'}}>
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <button className="btn-outline" onClick={() => navigate('/shop?category=kids')}>
             View All Kids Wear
           </button>
@@ -177,7 +194,7 @@ export default function Home() {
             {womenWear.slice(0, 8).map(p => <ProductCard key={p.id} product={p} />)}
           </div>
         )}
-        <div style={{textAlign:'center', marginTop:'40px'}}>
+        <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <button className="btn-outline" onClick={() => navigate('/shop?category=women')}>
             View All Women Wear
           </button>
@@ -212,7 +229,7 @@ export default function Home() {
         <div className={styles.reviewsGrid}>
           {REVIEWS.map(r => (
             <div key={r.name} className={styles.reviewCard}>
-              <div className={styles.reviewStars}>{'★'.repeat(r.stars)}{'☆'.repeat(5-r.stars)}</div>
+              <div className={styles.reviewStars}>{'★'.repeat(r.stars)}{'☆'.repeat(5 - r.stars)}</div>
               <p className={styles.reviewText}>"{r.text}"</p>
               <div className={styles.reviewAuthor}>
                 <div className={styles.reviewAvatar}>{r.name[0]}</div>
@@ -225,6 +242,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Heart, ShoppingCart, Star } from 'lucide-react'
+import { Heart, ShoppingCart } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useNavigate } from 'react-router-dom'
 import styles from './ProductCard.module.css'
@@ -47,12 +47,6 @@ export default function ProductCard({ product }) {
           {product.name}
         </div>
         <div className={styles.desc}>{product.description?.split('.')[0]}</div>
-
-        <div className={styles.rating}>
-          <Star size={12} fill="#E8A838" color="#E8A838" />
-          <span>{product.rating?.toFixed(1)}</span>
-          <span className={styles.ratingCount}>({product.reviewCount})</span>
-        </div>
 
         <div className={styles.bottom}>
           <div className={styles.priceWrap}>

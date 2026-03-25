@@ -19,8 +19,9 @@ export default function Login() {
     try {
       await login(email, password)
       toast.success('Welcome back!')
+      // Redirect back to the page they came from, or home
       const redirect = searchParams.get('redirect')
-      navigate(redirect ? `/${redirect}` : '/')
+      navigate(redirect ? redirect : '/')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid email or password')
     } finally { setLoading(false) }
@@ -29,20 +30,36 @@ export default function Login() {
   return (
     <div className={styles.page}>
       <div className={styles.box}>
-        <Link to="/" className={styles.logo}>Neem<span>roz</span></Link>
+        <Link to="/" className={styles.logo}>Ayezu <span>Collection</span></Link>
         <h1 className={styles.title}>Welcome Back</h1>
-        <p className={styles.sub}>Sign in to your Neemroz account</p>
+        <p className={styles.sub}>Sign in to your Ayezu Collection account</p>
+
+        {searchParams.get('redirect') && (
+          <div className={styles.loginPrompt}>
+            🔐 Please login to add items to your cart
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
             <label>Email Address</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              placeholder="you@email.com" required />
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              required
+            />
           </div>
           <div className={styles.field}>
             <label>Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••" required />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
           </div>
           <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
@@ -50,16 +67,16 @@ export default function Login() {
         </form>
 
         <p className={styles.switchText}>
-          New to Neemroz? <Link to="/register">Create account</Link>
+          New to Ayezu Collection? <Link to="/register">Create account</Link>
         </p>
       </div>
 
       <div className={styles.imgPanel}>
-        <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80" alt="bedroom" />
+        <img src="https://www.ayezu.com/images/products/new-21.jpg" alt="collection" />
         <div className={styles.imgOverlay} />
         <div className={styles.imgText}>
           <div className={styles.imgQuote}>"Where every night feels like luxury"</div>
-          <div className={styles.imgSub}>— Neemroz, Premium Home Linen</div>
+          <div className={styles.imgSub}>— Ayezu Collection, Premium Home Linen</div>
         </div>
       </div>
     </div>

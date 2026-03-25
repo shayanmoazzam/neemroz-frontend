@@ -310,3 +310,12 @@
   background: var(--cream);
 }
 .notifyInput:focus { border-color: var(--clay); }
+
+.catCard::after,
+.catCard::before,
+.imgCell::after,
+.imgCell::before {
+  display: none !important;
+  content: none !important;
+}
+

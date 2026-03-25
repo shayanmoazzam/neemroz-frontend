@@ -38,7 +38,7 @@ export default function Footer() {
       <div className={styles.main}>
         <div className={styles.brand}>
           <div className={styles.logo}>Ayezu <span>Collection</span></div>
-          <p>Premium quality bedsheets, women wear and men wear. Crafted with love, delivered with care.</p>
+          <p>Premium quality bedsheets, kids wear and women wear. Crafted with love, delivered with care.</p>
           <div className={styles.socials}>
             <a href="#" className={styles.social}>f</a>
             <a href="#" className={styles.social}>in</a>
@@ -50,23 +50,23 @@ export default function Footer() {
         <div className={styles.col}>
           <h4>Shop</h4>
           <ul>
-            <li><Link to="/shop?category=bedsheet">Bedsheet</Link></li>
-            <li><a href="#">Women Wear — Soon</a></li>
-            <li><a href="#">Men Wear — Soon</a></li>
+            <li><Link to="/shop?category=bedsheet">Bed Sheets</Link></li>
+            <li><Link to="/shop?category=kids">Kids Wear</Link></li>
+            <li><Link to="/shop?category=women">Women Wear</Link></li>
             <li><Link to="/shop">All Products</Link></li>
           </ul>
         </div>
 
         <div className={styles.col}>
-          <h4>Help</h4>
-          <ul>
-            <li><a href="#">FAQs</a></li>
-            <li><a href="#">Shipping Info</a></li>
-            <li><a href="#">Returns & Refunds</a></li>
-            <li><a href="#">Size Guide</a></li>
-            <li><a href="#">Track Order</a></li>
-          </ul>
-        </div>
+  <h4>Help</h4>
+  <ul>
+    <li><Link to="/faqs">FAQs</Link></li>
+    <li><Link to="/shipping-info">Shipping Info</Link></li>
+    <li><Link to="/returns-refunds">Returns & Refunds</Link></li>
+    <li><Link to="/size-guide">Size Guide</Link></li>
+    <li><Link to="/track-order">Track Order</Link></li>
+  </ul>
+</div>
 
         <div className={styles.col}>
           <h4>Contact</h4>

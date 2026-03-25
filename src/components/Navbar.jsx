@@ -39,13 +39,9 @@ export default function Navbar() {
         <Link to="/" className={styles.logo}>Ayezu <span>Collection</span></Link>
 
         <ul className={styles.links}>
-          <li><Link to="/shop?category=bedsheet">Bedsheet</Link></li>
-          <li>
-            <span className={styles.comingSoonLink}>Women Wear <span className={styles.soonTag}>Soon</span></span>
-          </li>
-          <li>
-            <span className={styles.comingSoonLink}>Men Wear <span className={styles.soonTag}>Soon</span></span>
-          </li>
+          <li><Link to="/shop?category=bedsheet">Bed Sheets</Link></li>
+          <li><Link to="/shop?category=kids">Kids Wear</Link></li>
+          <li><Link to="/shop?category=women">Women Wear</Link></li>
           <li><Link to="/shop">All Products</Link></li>
         </ul>
 
@@ -99,7 +95,7 @@ export default function Navbar() {
               autoFocus
               value={searchQ}
               onChange={e => setSearchQ(e.target.value)}
-              placeholder="Search bedsheets, collections..."
+              placeholder="Search bedsheets, kids wear, women wear..."
               className={styles.searchInput}
             />
             <button type="submit" className={styles.searchSubmit}>Search</button>
@@ -112,9 +108,9 @@ export default function Navbar() {
 
       {menuOpen && (
         <div className={styles.mobileMenu}>
-          <Link to="/shop?category=bedsheet" onClick={() => setMenuOpen(false)}>Bedsheet</Link>
-          <span className={styles.mobileComingSoon}>Women Wear — Coming Soon</span>
-          <span className={styles.mobileComingSoon}>Men Wear — Coming Soon</span>
+          <Link to="/shop?category=bedsheet" onClick={() => setMenuOpen(false)}>Bed Sheets</Link>
+          <Link to="/shop?category=kids" onClick={() => setMenuOpen(false)}>Kids Wear</Link>
+          <Link to="/shop?category=women" onClick={() => setMenuOpen(false)}>Women Wear</Link>
           <Link to="/shop" onClick={() => setMenuOpen(false)}>All Products</Link>
           {user ? (
             <>
