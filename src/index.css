@@ -13,13 +13,27 @@
   --r: 16px;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+/* ✅ Both html AND body must have overflow-x:hidden — iOS Safari ignores body alone */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 body {
   font-family: 'DM Sans', sans-serif;
   background: var(--cream);
   color: var(--ink);
   overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+/* Root container must never exceed viewport */
+#root {
+  max-width: 100vw;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 ::-webkit-scrollbar { width: 6px; }
@@ -28,7 +42,7 @@ body {
 
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
-img { display: block; }
+img { display: block; max-width: 100%; }
 
 .btn-primary {
   background: var(--deep);
@@ -40,6 +54,8 @@ img { display: block; }
   border: none;
   transition: background .2s, transform .15s;
   letter-spacing: .03em;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .btn-primary:hover { background: var(--accent); transform: translateY(-2px); }
 
@@ -52,6 +68,8 @@ img { display: block; }
   font-weight: 500;
   border: 1.5px solid var(--deep);
   transition: all .2s;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .btn-outline:hover { background: var(--deep); color: var(--cream); }
 
