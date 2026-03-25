@@ -9,6 +9,7 @@ import CartSidebar from './components/CartSidebar'
 import ScrollToTop from './components/ScrollToTop'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
+import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import Login from './pages/Login'
@@ -40,6 +41,7 @@ export default function App() {
                   fontSize: '0.85rem',
                   borderRadius: '50px',
                   padding: '12px 20px',
+                  marginBottom: '70px', // lift above bottom nav on mobile
                 },
                 success: { iconTheme: { primary: '#C4622D', secondary: '#FAF7F2' } },
               }}
@@ -68,6 +70,7 @@ export default function App() {
                   </Routes>
                   <Footer />
                   <WhatsAppButton />
+                  <BottomNav />
                 </>
               } />
             </Routes>

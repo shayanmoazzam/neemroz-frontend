@@ -1,0 +1,81 @@
+/* Only visible on mobile */
+.nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    background: var(--white);
+    border-top: 1px solid var(--sand);
+    box-shadow: 0 -4px 20px rgba(61, 43, 31, 0.10);
+    height: 62px;
+    align-items: stretch;
+    padding: 0;
+    /* Safe area for iPhone home bar */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 0.62rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--earth);
+    letter-spacing: 0.02em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    transition: color 0.2s;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .item:active {
+    background: var(--sand);
+    border-radius: 10px;
+  }
+
+  .active {
+    color: var(--accent);
+  }
+
+  .active svg {
+    stroke: var(--accent);
+  }
+
+  .iconWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--white);
+  }
+}
