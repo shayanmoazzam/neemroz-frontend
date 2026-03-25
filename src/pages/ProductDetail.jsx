@@ -11,6 +11,8 @@ import ProductCard from '../components/ProductCard'
 import StickyCart from '../components/StickyCart'
 import styles from './ProductDetail.module.css'
 
+const PHONE = '917001065007'
+
 const COLOR_NAMES = {
   '#8B0000': 'Dark Red', '#CC0000': 'Scarlet Red', '#FF4500': 'Orange Red',
   '#800000': 'Maroon',   '#0A1172': 'Navy Blue',    '#1a237e': 'Navy Blue',
@@ -50,7 +52,6 @@ export default function ProductDetail() {
   const [shareOpen, setShareOpen]     = useState(false)
   const thumbsRef = useRef(null)
 
-  // Touch swipe refs
   const touchStartX = useRef(null)
   const touchStartY = useRef(null)
 
@@ -98,7 +99,6 @@ export default function ProductDetail() {
   const prevImg = () => setActiveImg(i => (i - 1 + images.length) % images.length)
   const nextImg = () => setActiveImg(i => (i + 1) % images.length)
 
-  // Touch swipe handlers
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
@@ -114,7 +114,6 @@ export default function ProductDetail() {
     touchStartY.current = null
   }
 
-  // Share handlers
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({ title: product.name, url: window.location.href })
@@ -122,12 +121,25 @@ export default function ProductDetail() {
       setShareOpen(s => !s)
     }
   }
+
+  // Sends full product info to shop WhatsApp number
   const handleWhatsApp = () => {
-    const msg = `🛒 Check out *${product.name}* on Neemroz!
-₹${product.price?.toLocaleString('en-IN')}${product.oldPrice ? ` ~~₹${product.oldPrice?.toLocaleString('en-IN')}~~` : ''}
-${window.location.href}`
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+    const colorName = COLOR_NAMES[selectedColor] || selectedColor
+    const msg = [
+      `👋 Hi! I'm interested in ordering this product from Ayezu Collection:`,
+      ``,
+      `🛍️ *${product.name}*`,
+      `💰 Price: ₹${product.price?.toLocaleString('en-IN')}${product.oldPrice ? ` (was ₹${product.oldPrice?.toLocaleString('en-IN')})` : ''}`,
+      selectedSize  ? `📐 Size: ${selectedSize}` : '',
+      selectedColor ? `🎨 Color: ${colorName}` : '',
+      `🔢 Quantity: ${qty}`,
+      `🔗 ${window.location.href}`,
+      ``,
+      `Please confirm availability and help me place the order. Thank you!`,
+    ].filter(Boolean).join('\n')
+    window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`, '_blank')
   }
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href)
     setShareOpen(false)
@@ -212,7 +224,6 @@ ${window.location.href}`
               {product.category === 'bedsheet' ? '🛏️ Bed Sheet' : product.category === 'kids' ? '👗 Kids Wear' : '✨ Women Wear'}
             </span>
             <div className={styles.topActions}>
-              {/* Share button with dropdown */}
               <div className={styles.shareWrap}>
                 <button className={styles.shareBtn} onClick={handleShare} title="Share">
                   <Share2 size={15} />
@@ -327,9 +338,12 @@ ${window.location.href}`
             </button>
           </div>
 
-          {/* WhatsApp CTA */}
+          {/* WhatsApp Enquiry CTA — sends product info to shop number */}
           <button className={styles.waBtn} onClick={handleWhatsApp}>
-            💬 Share on WhatsApp
+            <svg viewBox="0 0 32 32" width="18" height="18" style={{flexShrink:0}}>
+              <path d="M16 0C7.163 0 0 7.163 0 16c0 2.833.738 5.49 2.031 7.807L0 32l8.418-2.007A15.93 15.93 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.784-1.858l-.486-.29-5.001 1.193 1.216-4.872-.317-.499A13.26 13.26 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.862c-.398-.2-2.355-1.162-2.72-1.294-.366-.133-.633-.2-.9.2-.266.398-1.031 1.294-1.265 1.56-.233.266-.466.3-.864.1-.398-.2-1.682-.62-3.203-1.977-1.184-1.056-1.983-2.36-2.216-2.758-.233-.398-.025-.614.175-.812.18-.178.398-.466.598-.698.2-.233.266-.4.4-.666.133-.267.066-.5-.033-.7-.1-.2-.9-2.167-1.233-2.967-.324-.78-.654-.674-.9-.686l-.766-.013c-.266 0-.7.1-1.066.5-.366.398-1.4 1.367-1.4 3.334s1.433 3.867 1.633 4.133c.2.267 2.82 4.302 6.833 6.035.954.412 1.699.658 2.28.843.957.305 1.829.262 2.517.159.768-.115 2.355-.963 2.688-1.893.333-.93.333-1.727.233-1.893-.1-.167-.366-.267-.764-.467z" fill="#25D366"/>
+            </svg>
+            Enquire on WhatsApp
           </button>
 
           <div className={styles.trust}>
@@ -445,7 +459,6 @@ ${window.location.href}`
         </div>
       )}
 
-      {/* STICKY ADD TO CART — mobile only, appears when buttons scroll out of view */}
       <StickyCart
         product={product}
         selectedSize={selectedSize}
