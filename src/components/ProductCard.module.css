@@ -26,6 +26,7 @@
   background: #2d8a4e; color: #fff;
   font-size: .65rem; font-weight: 600;
   padding: 3px 8px; border-radius: 50px;
+  z-index: 2;
 }
 .badge {
   position: absolute; top: 10px; left: 10px;
@@ -33,12 +34,12 @@
   font-size: .63rem; font-weight: 700;
   padding: 3px 8px; border-radius: 50px;
   letter-spacing: .04em;
+  z-index: 2;
 }
 
-/* Wishlist — always visible on mobile (no hover needed) */
 .wishBtn {
   position: absolute; top: 10px; right: 10px;
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: rgba(255,255,255,.92);
   border: none; display: flex;
   align-items: center; justify-content: center;
@@ -46,7 +47,7 @@
   color: var(--earth);
   opacity: 0;
   transform: scale(.8);
-  z-index: 2;
+  z-index: 3;
 }
 .card:hover .wishBtn { opacity: 1; transform: scale(1); }
 .wished {
@@ -56,7 +57,6 @@
   color: #e53e3e !important;
 }
 
-/* Add to cart — always visible on mobile */
 .cartOverlay {
   position: absolute; bottom: 0; left: 0; right: 0;
   background: rgba(26,16,8,.82);
@@ -70,6 +70,7 @@
   transform: translateY(100%);
   transition: transform .25s ease;
   z-index: 2;
+  min-height: 44px;
 }
 .card:hover .cartOverlay { transform: translateY(0); }
 
@@ -101,14 +102,19 @@
   .wishBtn {
     opacity: 1;
     transform: scale(1);
-    top: 8px; right: 8px;
+    top: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
   }
-  .discBadge { top: 8px; right: 8px; }
-  /* If discount badge exists, push wishBtn below it */
+  /* If discount badge present, shift wishBtn so they don't overlap */
+  .discBadge { top: 8px; right: 52px; }
+  .badge { top: 8px; left: 8px; }
   .cartOverlay {
     transform: translateY(0);
     background: rgba(26,16,8,.75);
-    padding: 9px;
-    font-size: .75rem;
+    padding: 10px;
+    font-size: .78rem;
+    min-height: 44px;
   }
 }

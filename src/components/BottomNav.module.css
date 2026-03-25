@@ -17,7 +17,6 @@
     height: 62px;
     align-items: stretch;
     padding: 0;
-    /* Safe area for iPhone home bar */
     padding-bottom: env(safe-area-inset-bottom);
   }
 
@@ -36,10 +35,11 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px 4px;
-    transition: color 0.2s;
+    padding: 6px 4px 8px;
+    transition: color 0.18s;
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
   }
 
   .item:active {
@@ -53,6 +53,19 @@
 
   .active svg {
     stroke: var(--accent);
+  }
+
+  /* Active pill indicator under icon */
+  .active::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 3px;
+    border-radius: 50px;
+    background: var(--accent);
   }
 
   .iconWrap {

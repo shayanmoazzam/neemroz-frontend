@@ -51,6 +51,7 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab]     = useState('description')
   const [shareOpen, setShareOpen]     = useState(false)
   const thumbsRef = useRef(null)
+  const shareWrapRef = useRef(null)
 
   const touchStartX = useRef(null)
   const touchStartY = useRef(null)
@@ -72,6 +73,22 @@ export default function ProductDetail() {
       .catch(() => navigate('/shop'))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Close share dropdown when tapping outside
+  useEffect(() => {
+    if (!shareOpen) return
+    const handler = (e) => {
+      if (shareWrapRef.current && !shareWrapRef.current.contains(e.target)) {
+        setShareOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [shareOpen])
 
   if (loading) return (
     <div className={styles.loadingPage}>
@@ -122,7 +139,6 @@ export default function ProductDetail() {
     }
   }
 
-  // Sends full product info to shop WhatsApp number
   const handleWhatsApp = () => {
     const colorName = COLOR_NAMES[selectedColor] || selectedColor
     const msg = [
@@ -138,6 +154,7 @@ export default function ProductDetail() {
       `Please confirm availability and help me place the order. Thank you!`,
     ].filter(Boolean).join('\n')
     window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(msg)}`, '_blank')
+    setShareOpen(false)
   }
 
   const handleCopyLink = () => {
@@ -224,7 +241,7 @@ export default function ProductDetail() {
               {product.category === 'bedsheet' ? '🛏️ Bed Sheet' : product.category === 'kids' ? '👗 Kids Wear' : '✨ Women Wear'}
             </span>
             <div className={styles.topActions}>
-              <div className={styles.shareWrap}>
+              <div className={styles.shareWrap} ref={shareWrapRef}>
                 <button className={styles.shareBtn} onClick={handleShare} title="Share">
                   <Share2 size={15} />
                 </button>
@@ -338,7 +355,7 @@ export default function ProductDetail() {
             </button>
           </div>
 
-          {/* WhatsApp Enquiry CTA — sends product info to shop number */}
+          {/* WhatsApp Enquiry CTA */}
           <button className={styles.waBtn} onClick={handleWhatsApp}>
             <svg viewBox="0 0 32 32" width="18" height="18" style={{flexShrink:0}}>
               <path d="M16 0C7.163 0 0 7.163 0 16c0 2.833.738 5.49 2.031 7.807L0 32l8.418-2.007A15.93 15.93 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.784-1.858l-.486-.29-5.001 1.193 1.216-4.872-.317-.499A13.26 13.26 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.862c-.398-.2-2.355-1.162-2.72-1.294-.366-.133-.633-.2-.9.2-.266.398-1.031 1.294-1.265 1.56-.233.266-.466.3-.864.1-.398-.2-1.682-.62-3.203-1.977-1.184-1.056-1.983-2.36-2.216-2.758-.233-.398-.025-.614.175-.812.18-.178.398-.466.598-.698.2-.233.266-.4.4-.666.133-.267.066-.5-.033-.7-.1-.2-.9-2.167-1.233-2.967-.324-.78-.654-.674-.9-.686l-.766-.013c-.266 0-.7.1-1.066.5-.366.398-1.4 1.367-1.4 3.334s1.433 3.867 1.633 4.133c.2.267 2.82 4.302 6.833 6.035.954.412 1.699.658 2.28.843.957.305 1.829.262 2.517.159.768-.115 2.355-.963 2.688-1.893.333-.93.333-1.727.233-1.893-.1-.167-.366-.267-.764-.467z" fill="#25D366"/>
