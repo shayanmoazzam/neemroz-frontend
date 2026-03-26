@@ -365,13 +365,72 @@
 .formGroup select:focus,
 .formGroup textarea:focus { border-color: var(--accent); }
 .fullWidth { grid-column: 1 / -1; }
-.imgPreview { margin-top: 12px; }
-.imgPreview img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; }
 .modalFooter {
   display: flex; justify-content: flex-end; gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid var(--sand);
 }
+
+/* ── IMAGE UPLOAD ── */
+.imageUploadRow {
+  display: flex; gap: 8px; align-items: stretch;
+}
+.imageUrlInput {
+  flex: 1;
+  padding: 9px 12px; border-radius: 8px;
+  border: 1.5px solid var(--sand);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .88rem; color: var(--deep);
+  outline: none; background: #fff;
+  transition: border-color .2s;
+  box-sizing: border-box;
+}
+.imageUrlInput:focus { border-color: var(--accent); }
+.uploadBtn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: 8px;
+  border: 1.5px solid var(--accent);
+  background: var(--accent); color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.uploadBtn:hover:not(:disabled) { background: var(--deep); border-color: var(--deep); }
+.uploadBtn:disabled { opacity: .65; cursor: not-allowed; }
+.imgPreviewInline {
+  margin-top: 10px;
+  position: relative;
+  display: inline-block;
+}
+.imgPreviewInline img {
+  width: 100%; max-height: 180px;
+  object-fit: cover; border-radius: 10px;
+  display: block;
+}
+.removeImgBtn {
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 6px;
+  padding: 5px 12px; border-radius: 6px;
+  border: 1px solid #fecaca; background: #fff5f5;
+  color: #e53e3e;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .76rem; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+}
+.removeImgBtn:hover { background: #ffe4e4; }
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── CONFIRM MODAL ── */
 .confirmModal {
@@ -447,4 +506,7 @@
   .formGroup input,
   .formGroup select,
   .formGroup textarea { font-size: 16px; }
+
+  .imageUploadRow { flex-direction: column; }
+  .uploadBtn { width: 100%; justify-content: center; }
 }
