@@ -8,19 +8,20 @@ import styles from './Orders.module.css'
 const STATUS_CONFIG = {
   pending:    { label: 'Pending',    icon: Clock,        color: '#856404', bg: '#fff3cd' },
   processing: { label: 'Processing', icon: Package,      color: '#0c63e4', bg: '#cfe2ff' },
+  confirmed:  { label: 'Confirmed',  icon: CheckCircle,  color: '#0c63e4', bg: '#cfe2ff' },
   shipped:    { label: 'Shipped',    icon: Truck,        color: '#0a3622', bg: '#d1e7dd' },
   delivered:  { label: 'Delivered',  icon: CheckCircle,  color: '#0a3622', bg: '#d1e7dd' },
   cancelled:  { label: 'Cancelled',  icon: XCircle,      color: '#842029', bg: '#f8d7da' },
 }
 
-const CANCELLABLE = ['pending', 'processing']
+const CANCELLABLE = ['pending', 'confirmed', 'processing']
 
 export default function Orders() {
-  const [orders, setOrders]         = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [cancelModal, setCancelModal] = useState(null)  // order object
+  const [orders, setOrders]             = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [cancelModal, setCancelModal]   = useState(null)
   const [cancelReason, setCancelReason] = useState('')
-  const [cancelling, setCancelling] = useState(false)
+  const [cancelling, setCancelling]     = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -36,7 +37,9 @@ export default function Orders() {
     try {
       await api.patch(`/orders/${cancelModal.id}/cancel`, { reason: cancelReason.trim() })
       setOrders(prev => prev.map(o =>
-        o.id === cancelModal.id ? { ...o, status: 'cancelled', cancelReason: cancelReason.trim() } : o
+        o.id === cancelModal.id
+          ? { ...o, status: 'CANCELLED', cancelReason: cancelReason.trim() }
+          : o
       ))
       toast.success('Order cancelled successfully')
       setCancelModal(null)
@@ -78,9 +81,12 @@ export default function Orders() {
       ) : (
         <div className={styles.list}>
           {orders.map(order => {
-            const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
+            // Normalize status to lowercase for consistent comparison
+            const statusKey = (order.status || '').toLowerCase()
+            const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending
             const Icon = cfg.icon
-            const canCancel = CANCELLABLE.includes(order.status)
+            const canCancel = CANCELLABLE.includes(statusKey)
+
             return (
               <div key={order.id} className={styles.card}>
                 <div className={styles.cardTop} onClick={() => navigate(`/track-order?id=${order.id}`)}>
@@ -110,12 +116,17 @@ export default function Orders() {
                 </div>
 
                 <div className={styles.cardFooter}>
-                  <div onClick={() => navigate(`/track-order?id=${order.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, cursor: 'pointer' }}>
-                    <div className={styles.orderTotal}>Total: <strong>₹{order.total?.toLocaleString('en-IN')}</strong></div>
-                    <div className={styles.orderDate}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</div>
+                  <div
+                    onClick={() => navigate(`/track-order?id=${order.id}`)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, cursor: 'pointer' }}
+                  >
+                    <div className={styles.orderTotal}>Total: <strong>₹{(order.totalAmount ?? order.total)?.toLocaleString('en-IN')}</strong></div>
+                    <div className={styles.orderDate}>
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                    </div>
                     <ChevronRight size={16} className={styles.chevron} />
                   </div>
-                  {/* Cancel button — only for pending/processing */}
+
                   {canCancel && (
                     <button
                       className={styles.cancelOrderBtn}
@@ -126,8 +137,7 @@ export default function Orders() {
                   )}
                 </div>
 
-                {/* Show cancel reason if already cancelled */}
-                {order.status === 'cancelled' && order.cancelReason && (
+                {statusKey === 'cancelled' && order.cancelReason && (
                   <div className={styles.cancelledNote}>
                     Reason: {order.cancelReason}
                   </div>
