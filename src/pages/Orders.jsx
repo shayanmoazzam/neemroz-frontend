@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Package, ChevronRight, Clock, CheckCircle, Truck, XCircle } from 'lucide-react'
+import { Package, ChevronRight, Clock, CheckCircle, Truck, XCircle, AlertTriangle, X } from 'lucide-react'
 import api from '../api'
+import toast from 'react-hot-toast'
 import styles from './Orders.module.css'
 
 const STATUS_CONFIG = {
@@ -12,9 +13,14 @@ const STATUS_CONFIG = {
   cancelled:  { label: 'Cancelled',  icon: XCircle,      color: '#842029', bg: '#f8d7da' },
 }
 
+const CANCELLABLE = ['pending', 'processing']
+
 export default function Orders() {
-  const [orders, setOrders]   = useState([])
-  const [loading, setLoading] = useState(true)
+  const [orders, setOrders]         = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [cancelModal, setCancelModal] = useState(null)  // order object
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelling, setCancelling] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -23,6 +29,24 @@ export default function Orders() {
       .catch(() => setOrders([]))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleCancel = async () => {
+    if (!cancelReason.trim()) { toast.error('Please provide a reason'); return }
+    setCancelling(true)
+    try {
+      await api.patch(`/orders/${cancelModal.id}/cancel`, { reason: cancelReason.trim() })
+      setOrders(prev => prev.map(o =>
+        o.id === cancelModal.id ? { ...o, status: 'cancelled', cancelReason: cancelReason.trim() } : o
+      ))
+      toast.success('Order cancelled successfully')
+      setCancelModal(null)
+      setCancelReason('')
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to cancel order')
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   if (loading) return (
     <div className={styles.page}>
@@ -56,19 +80,17 @@ export default function Orders() {
           {orders.map(order => {
             const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
             const Icon = cfg.icon
+            const canCancel = CANCELLABLE.includes(order.status)
             return (
-              <div key={order.id} className={styles.card} onClick={() => navigate(`/track-order?id=${order.id}`)}>
-                <div className={styles.cardTop}>
+              <div key={order.id} className={styles.card}>
+                <div className={styles.cardTop} onClick={() => navigate(`/track-order?id=${order.id}`)}>
                   <div className={styles.orderId}>Order #{order.id}</div>
-                  <span
-                    className={styles.statusBadge}
-                    style={{ color: cfg.color, background: cfg.bg }}
-                  >
+                  <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>
                     <Icon size={12} /> {cfg.label}
                   </span>
                 </div>
 
-                <div className={styles.cardItems}>
+                <div className={styles.cardItems} onClick={() => navigate(`/track-order?id=${order.id}`)}>
                   {order.items?.slice(0, 2).map((item, i) => (
                     <div key={i} className={styles.itemRow}>
                       <img
@@ -88,13 +110,69 @@ export default function Orders() {
                 </div>
 
                 <div className={styles.cardFooter}>
-                  <div className={styles.orderTotal}>Total: <strong>₹{order.total?.toLocaleString('en-IN')}</strong></div>
-                  <div className={styles.orderDate}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</div>
-                  <ChevronRight size={16} className={styles.chevron} />
+                  <div onClick={() => navigate(`/track-order?id=${order.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, cursor: 'pointer' }}>
+                    <div className={styles.orderTotal}>Total: <strong>₹{order.total?.toLocaleString('en-IN')}</strong></div>
+                    <div className={styles.orderDate}>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</div>
+                    <ChevronRight size={16} className={styles.chevron} />
+                  </div>
+                  {/* Cancel button — only for pending/processing */}
+                  {canCancel && (
+                    <button
+                      className={styles.cancelOrderBtn}
+                      onClick={e => { e.stopPropagation(); setCancelModal(order); setCancelReason('') }}
+                    >
+                      <XCircle size={14} /> Cancel
+                    </button>
+                  )}
                 </div>
+
+                {/* Show cancel reason if already cancelled */}
+                {order.status === 'cancelled' && order.cancelReason && (
+                  <div className={styles.cancelledNote}>
+                    Reason: {order.cancelReason}
+                  </div>
+                )}
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* ── CANCEL MODAL ── */}
+      {cancelModal && (
+        <div className={styles.modalOverlay} onClick={() => setCancelModal(null)}>
+          <div className={styles.cancelModalBox} onClick={e => e.stopPropagation()}>
+            <div className={styles.cancelModalHead}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <AlertTriangle size={22} color="#e53e3e" />
+                <h3>Cancel Order #{cancelModal.id}?</h3>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setCancelModal(null)}><X size={18}/></button>
+            </div>
+            <p className={styles.cancelModalSub}>Please tell us why you want to cancel this order.</p>
+            <div className={styles.reasonList}>
+              {['Changed my mind', 'Found a better price', 'Ordered by mistake', 'Delivery taking too long', 'Other'].map(r => (
+                <button
+                  key={r}
+                  className={`${styles.reasonBtn} ${cancelReason === r ? styles.reasonActive : ''}`}
+                  onClick={() => setCancelReason(r)}
+                >{r}</button>
+              ))}
+            </div>
+            <textarea
+              className={styles.reasonInput}
+              placeholder="Add more details (optional)"
+              value={cancelReason}
+              onChange={e => setCancelReason(e.target.value)}
+              rows={2}
+            />
+            <div className={styles.cancelModalFoot}>
+              <button className={styles.keepBtn} onClick={() => setCancelModal(null)}>Keep Order</button>
+              <button className={styles.confirmCancelBtn} onClick={handleCancel} disabled={cancelling}>
+                {cancelling ? 'Cancelling...' : <><XCircle size={15}/> Confirm Cancel</>}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1,136 +1,178 @@
 .page {
-  max-width: 800px;
+  max-width: 700px;
   margin: 0 auto;
-  padding: 28px 6% 100px;
-  min-height: 80vh;
+  padding: 28px 5% 100px;
+  min-height: 70vh;
 }
-
-.pageHead { margin-bottom: 24px; }
+.pageHead { margin-bottom: 28px; }
 .pageTitle {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 400;
-  color: var(--deep);
-  margin: 0;
+  font-size: 2rem; font-weight: 300; color: var(--deep); margin: 0 0 4px;
 }
-.pageSubtitle { color: var(--earth); font-size: .85rem; margin: 4px 0 0; }
+.pageSubtitle { font-size: .85rem; color: var(--earth); }
 
-/* SKELETON */
-.skeletonList { display: flex; flex-direction: column; gap: 16px; }
-.skeletonCard {
-  border-radius: 16px;
-  background: var(--white);
-  box-shadow: var(--shadow);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.skeletonLine {
-  height: 14px;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #e8e0d8 25%, #f5f0ea 50%, #e8e0d8 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite;
-}
-@keyframes shimmer {
-  from { background-position: 200% 0; }
-  to   { background-position: -200% 0; }
-}
-
-/* EMPTY */
 .empty {
-  text-align: center;
-  padding: 80px 20px;
+  text-align: center; padding: 60px 20px;
   color: var(--earth);
 }
-.empty p { font-size: 1.1rem; margin: 16px 0 20px; }
+.empty p { font-size: 1rem; margin: 16px 0; }
 .shopBtn {
-  padding: 12px 28px;
-  border-radius: 50px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
+  background: var(--deep); color: var(--cream);
+  border: none; padding: 12px 28px; border-radius: 50px;
+  font-family: 'DM Sans', sans-serif; font-size: .88rem;
   cursor: pointer;
-  font-size: .9rem;
 }
 
-/* ORDER CARD */
-.list { display: flex; flex-direction: column; gap: 16px; }
+.list { display: flex; flex-direction: column; gap: 14px; }
 
 .card {
   background: var(--white);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 20px;
-  cursor: pointer;
-  transition: transform .15s, box-shadow .15s;
-  border: 1.5px solid transparent;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
-  border-color: var(--sand);
-}
-
-.cardTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-.orderId { font-weight: 600; font-size: .9rem; color: var(--deep); }
-
-.statusBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: .72rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 50px;
-}
-
-.cardItems { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-
-.itemRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.itemImg {
-  width: 52px; height: 52px;
-  border-radius: 10px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: var(--sand);
-}
-.itemInfo { flex: 1; min-width: 0; }
-.itemName {
-  font-size: .85rem;
-  font-weight: 500;
-  color: var(--deep);
-  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: default;
 }
-.itemMeta { font-size: .78rem; color: var(--earth); margin-top: 2px; }
-.moreItems { font-size: .78rem; color: var(--earth); padding-left: 64px; }
+.cardTop {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px 10px;
+  cursor: pointer;
+}
+.orderId { font-weight: 600; font-size: .88rem; color: var(--deep); }
+.statusBadge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 50px;
+  font-size: .75rem; font-weight: 600;
+}
+
+.cardItems { padding: 0 18px 10px; cursor: pointer; }
+.itemRow { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--sand); }
+.itemRow:last-child { border-bottom: none; }
+.itemImg { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.itemInfo { flex: 1; min-width: 0; }
+.itemName { font-size: .83rem; font-weight: 500; color: var(--deep); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.itemMeta { font-size: .75rem; color: var(--earth); }
+.moreItems { font-size: .75rem; color: var(--earth); padding-top: 6px; }
 
 .cardFooter {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-top: 14px;
-  border-top: 1px solid var(--sand);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px 14px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-.orderTotal { font-size: .85rem; color: var(--earth); flex: 1; }
+.orderTotal { font-size: .84rem; color: var(--earth); }
 .orderTotal strong { color: var(--deep); }
-.orderDate { font-size: .78rem; color: var(--earth); }
-.chevron { color: var(--earth); flex-shrink: 0; }
+.orderDate { font-size: .75rem; color: var(--earth); }
+.chevron { color: var(--earth); }
 
-@media (max-width: 768px) {
-  .page { padding: 16px 4% 120px; }
-  .itemImg { width: 44px; height: 44px; }
+/* Cancel button on order card */
+.cancelOrderBtn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 50px;
+  border: 1.5px solid #e53e3e;
+  background: none; color: #e53e3e;
+  font-size: .78rem; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: background .2s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.cancelOrderBtn:hover { background: #fff5f5; }
+
+.cancelledNote {
+  margin: 0 18px 12px;
+  padding: 8px 12px;
+  background: #fff5f5;
+  border-radius: 8px;
+  font-size: .78rem;
+  color: #842029;
+  border-left: 3px solid #e53e3e;
+}
+
+/* ── CANCEL MODAL ── */
+.modalOverlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  padding: 0;
+}
+.cancelModalBox {
+  background: var(--white);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 36px;
+  width: 100%; max-width: 500px;
+  box-shadow: var(--shadow-lg);
+}
+.cancelModalHead {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 8px;
+}
+.cancelModalHead h3 { font-size: 1.05rem; font-weight: 600; color: var(--deep); margin: 0; }
+.closeBtn { background: none; border: none; cursor: pointer; color: var(--earth); padding: 4px; }
+.cancelModalSub { font-size: .84rem; color: var(--earth); margin: 0 0 16px; }
+
+.reasonList { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.reasonBtn {
+  padding: 7px 14px; border-radius: 50px;
+  border: 1.5px solid var(--sand);
+  background: none; font-size: .78rem;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  color: var(--deep); transition: all .15s;
+}
+.reasonActive {
+  border-color: #e53e3e; background: #fff5f5; color: #e53e3e; font-weight: 600;
+}
+
+.reasonInput {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1.5px solid var(--sand);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px; resize: none;
+  outline: none; margin-bottom: 18px;
+  color: var(--deep);
+}
+.reasonInput:focus { border-color: var(--accent); }
+
+.cancelModalFoot { display: flex; gap: 10px; }
+.keepBtn {
+  flex: 1; padding: 13px; border-radius: 50px;
+  border: 1.5px solid var(--deep);
+  background: none; color: var(--deep);
+  font-size: .9rem; font-weight: 500;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+}
+.confirmCancelBtn {
+  flex: 1; padding: 13px; border-radius: 50px;
+  border: none; background: #e53e3e; color: #fff;
+  font-size: .9rem; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background .2s;
+}
+.confirmCancelBtn:hover { background: #c53030; }
+.confirmCancelBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Skeletons */
+.skeletonList { display: flex; flex-direction: column; gap: 14px; padding: 28px 5%; }
+.skeletonCard {
+  background: var(--white); border-radius: 16px;
+  padding: 20px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.skeletonLine {
+  height: 14px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--sand) 25%, #f5f0ea 50%, var(--sand) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+@media (max-width: 480px) {
+  .page { padding: 16px 4% 100px; }
+  .pageTitle { font-size: 1.6rem; }
+  .cardFooter { gap: 6px; }
+  .cancelOrderBtn { padding: 6px 12px; font-size: .75rem; }
 }
