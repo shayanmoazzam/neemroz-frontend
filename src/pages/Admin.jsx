@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Package, ShoppingBag, Users, TrendingUp,
   Plus, Pencil, Trash2, X, Check, AlertTriangle,
-  ChevronDown, ChevronUp, Search, Filter
+  ChevronDown, ChevronUp, Search, Upload, ImagePlus
 } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -29,6 +29,7 @@ const ALL_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelle
 export default function Admin() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const fileInputRef = useRef(null)
 
   const [tab, setTab]               = useState('dashboard')
   const [products, setProducts]     = useState([])
@@ -39,6 +40,7 @@ export default function Admin() {
   const [showForm, setShowForm]     = useState(false)
   const [delConfirm, setDelConfirm] = useState(null)
   const [saving, setSaving]         = useState(false)
+  const [uploading, setUploading]   = useState(false)
   const [search, setSearch]         = useState('')
   const [orderSearch, setOrderSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -61,6 +63,27 @@ export default function Admin() {
   }
 
   useEffect(() => { loadData() }, [])
+
+  // ── Image upload to Cloudinary via backend ──
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      setForm(f => ({ ...f, imageUrl: res.data.url }))
+      toast.success('Image uploaded!')
+    } catch {
+      toast.error('Image upload failed')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
 
   const stats = [
     { icon: <Package size={22}/>,     label: 'Total Products', value: products.length,      color: '#8B0000' },
@@ -440,10 +463,50 @@ export default function Admin() {
                   <label>Review Count</label>
                   <input type="number" value={form.reviewCount} onChange={e => setForm(f => ({ ...f, reviewCount: e.target.value }))} placeholder="124" />
                 </div>
+
+                {/* Image Upload Field */}
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Image URL *</label>
-                  <input value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} placeholder="https://..." />
+                  <label>Product Image *</label>
+                  <div className={styles.imageUploadRow}>
+                    <input
+                      value={form.imageUrl}
+                      onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+                      placeholder="Paste URL or upload image below"
+                      className={styles.imageUrlInput}
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      onChange={handleImageUpload}
+                    />
+                    <button
+                      type="button"
+                      className={styles.uploadBtn}
+                      onClick={() => fileInputRef.current.click()}
+                      disabled={uploading}
+                    >
+                      {uploading
+                        ? <><span className={styles.spinner} /> Uploading...</>
+                        : <><ImagePlus size={15} /> Upload Image</>
+                      }
+                    </button>
+                  </div>
+                  {form.imageUrl && (
+                    <div className={styles.imgPreviewInline}>
+                      <img src={form.imageUrl} alt="preview" />
+                      <button
+                        type="button"
+                        className={styles.removeImgBtn}
+                        onClick={() => setForm(f => ({ ...f, imageUrl: '' }))}
+                      >
+                        <X size={14} /> Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
+
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Sizes (comma separated)</label>
                   <input value={form.sizes} onChange={e => setForm(f => ({ ...f, sizes: e.target.value }))} placeholder="Single, Double, King, Queen" />
@@ -457,7 +520,6 @@ export default function Admin() {
                   <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} placeholder="Product description..." />
                 </div>
               </div>
-              {form.imageUrl && <div className={styles.imgPreview}><img src={form.imageUrl} alt="preview" /></div>}
             </div>
             <div className={styles.modalFooter}>
               <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
