@@ -47,7 +47,7 @@ export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') navigate('/')
+    if (!user || user.role?.toUpperCase() !== 'ADMIN') navigate('/')
   }, [user])
 
   const loadData = () => {
