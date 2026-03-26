@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Package, ShoppingBag, Users, TrendingUp,
   Plus, Pencil, Trash2, X, Check, AlertTriangle,
-  ChevronDown, ChevronUp, Search, Upload, ImagePlus
+  ChevronDown, ChevronUp, Search, Upload, ImagePlus, Mail
 } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -34,6 +34,9 @@ export default function Admin() {
   const [tab, setTab]               = useState('dashboard')
   const [products, setProducts]     = useState([])
   const [orders, setOrders]         = useState([])
+  const [subscribers, setSubscribers] = useState([])
+  const [subLoading, setSubLoading] = useState(false)
+  const [subSearch, setSubSearch]   = useState('')
   const [loading, setLoading]       = useState(true)
   const [form, setForm]             = useState(EMPTY_FORM)
   const [editId, setEditId]         = useState(null)
@@ -64,6 +67,27 @@ export default function Admin() {
 
   useEffect(() => { loadData() }, [])
 
+  // Load subscribers when tab is opened
+  useEffect(() => {
+    if (tab === 'subscribers' && subscribers.length === 0) {
+      setSubLoading(true)
+      api.get('/newsletter/subscribers')
+        .then(r => setSubscribers(Array.isArray(r.data) ? r.data : []))
+        .catch(() => toast.error('Failed to load subscribers'))
+        .finally(() => setSubLoading(false))
+    }
+  }, [tab])
+
+  const handleDeleteSubscriber = async (id) => {
+    try {
+      await api.delete(`/newsletter/subscribers/${id}`)
+      setSubscribers(prev => prev.filter(s => s.id !== id))
+      toast.success('Subscriber removed')
+    } catch {
+      toast.error('Failed to remove subscriber')
+    }
+  }
+
   // ── Image upload to Cloudinary via backend ──
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
@@ -86,10 +110,10 @@ export default function Admin() {
   }
 
   const stats = [
-    { icon: <Package size={22}/>,     label: 'Total Products', value: products.length,      color: '#8B0000' },
-    { icon: <ShoppingBag size={22}/>, label: 'Total Orders',   value: orders.length,        color: '#C4622D' },
-    { icon: <TrendingUp size={22}/>,  label: 'Revenue',        value: `₹${orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0).toLocaleString('en-IN')}`, color: '#2d8a4e' },
-    { icon: <Users size={22}/>,       label: 'Customers',      value: [...new Set(orders.map(o => o.userId))].length, color: '#0A1172' },
+    { icon: <Package size={22}/>,     label: 'Total Products',  value: products.length,      color: '#8B0000' },
+    { icon: <ShoppingBag size={22}/>, label: 'Total Orders',    value: orders.length,        color: '#C4622D' },
+    { icon: <TrendingUp size={22}/>,  label: 'Revenue',         value: `₹${orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.totalAmount || o.total || 0), 0).toLocaleString('en-IN')}`, color: '#2d8a4e' },
+    { icon: <Mail size={22}/>,        label: 'Subscribers',     value: subscribers.length,   color: '#6B21A8' },
   ]
 
   // ── Product handlers ──
@@ -145,7 +169,7 @@ export default function Admin() {
     }
   }
 
-  // ── Filtered orders ──
+  // ── Filtered lists ──
   const filteredOrders = orders.filter(o => {
     const matchSearch =
       String(o.id).includes(orderSearch) ||
@@ -158,6 +182,10 @@ export default function Admin() {
   const filteredProducts = products.filter(p =>
     p.name?.toLowerCase().includes(search.toLowerCase()) ||
     p.category?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const filteredSubscribers = subscribers.filter(s =>
+    s.email?.toLowerCase().includes(subSearch.toLowerCase())
   )
 
   if (loading) return <div className={styles.loading}>Loading admin panel...</div>
@@ -173,9 +201,10 @@ export default function Admin() {
         <div className={styles.sidebarLogo}>⚙️ Admin Panel</div>
         <nav className={styles.sideNav}>
           {[
-            { key: 'dashboard', label: '📊 Dashboard' },
-            { key: 'products',  label: '📦 Products' },
-            { key: 'orders',    label: '🛍️ Orders' },
+            { key: 'dashboard',   label: '📊 Dashboard' },
+            { key: 'products',    label: '📦 Products' },
+            { key: 'orders',      label: '🛒 Orders' },
+            { key: 'subscribers', label: '📧 Subscribers' },
           ].map(item => (
             <button
               key={item.key}
@@ -236,7 +265,7 @@ export default function Admin() {
                         <td>#{o.id}</td>
                         <td>{o.shippingName || `${o.firstName || ''} ${o.lastName || ''}`.trim() || '—'}</td>
                         <td>{o.items?.length || 0} items</td>
-                        <td>₹{o.total?.toLocaleString('en-IN')}</td>
+                        <td>₹{(o.totalAmount || o.total)?.toLocaleString('en-IN')}</td>
                         <td><span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>{o.status || 'pending'}</span></td>
                         <td>{new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
                       </tr>
@@ -289,7 +318,6 @@ export default function Admin() {
           <div>
             <h1 className={styles.pageTitle}>All Orders ({filteredOrders.length})</h1>
 
-            {/* Filters */}
             <div className={styles.orderFilters}>
               <div className={styles.searchBox}>
                 <Search size={15}/>
@@ -325,7 +353,6 @@ export default function Admin() {
                   const isExpanded = expandedOrder === o.id
                   return (
                     <div key={o.id} className={styles.orderCard}>
-                      {/* Order card header */}
                       <div className={styles.orderCardHead} onClick={() => setExpandedOrder(isExpanded ? null : o.id)}>
                         <div className={styles.orderCardLeft}>
                           <div className={styles.orderCardId}>Order #{o.id}</div>
@@ -338,7 +365,7 @@ export default function Admin() {
                           </div>
                         </div>
                         <div className={styles.orderCardRight}>
-                          <div className={styles.orderCardTotal}>₹{o.total?.toLocaleString('en-IN')}</div>
+                          <div className={styles.orderCardTotal}>₹{(o.totalAmount || o.total)?.toLocaleString('en-IN')}</div>
                           <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>
                             {o.status || 'pending'}
                           </span>
@@ -346,11 +373,8 @@ export default function Admin() {
                         </div>
                       </div>
 
-                      {/* Expanded details */}
                       {isExpanded && (
                         <div className={styles.orderCardBody}>
-
-                          {/* Items */}
                           <div className={styles.orderItemsList}>
                             <div className={styles.orderSectionLabel}>📦 Items Ordered</div>
                             {o.items?.map((item, i) => (
@@ -368,7 +392,6 @@ export default function Admin() {
                             ))}
                           </div>
 
-                          {/* Shipping address */}
                           <div className={styles.orderAddress}>
                             <div className={styles.orderSectionLabel}>📍 Shipping Address</div>
                             <div className={styles.orderAddressText}>
@@ -376,20 +399,17 @@ export default function Admin() {
                             </div>
                           </div>
 
-                          {/* Payment & price */}
                           <div className={styles.orderMeta2}>
                             <div><span className={styles.metaLabel}>Payment:</span> {o.paymentMethod || '—'}</div>
                             {o.couponDiscount > 0 && <div><span className={styles.metaLabel}>Coupon Discount:</span> −₹{o.couponDiscount}</div>}
                           </div>
 
-                          {/* Cancellation note if cancelled by user */}
                           {o.status === 'cancelled' && o.cancelReason && (
                             <div className={styles.cancelNote}>
                               ❌ Cancelled by user: <em>{o.cancelReason}</em>
                             </div>
                           )}
 
-                          {/* Status changer */}
                           <div className={styles.statusChanger}>
                             <div className={styles.orderSectionLabel}>🔄 Update Status</div>
                             <div className={styles.statusBtns}>
@@ -415,6 +435,73 @@ export default function Admin() {
             )}
           </div>
         )}
+
+        {/* ── SUBSCRIBERS ── */}
+        {tab === 'subscribers' && (
+          <div>
+            <div className={styles.topBar}>
+              <h1 className={styles.pageTitle}>📧 Subscribers ({filteredSubscribers.length})</h1>
+              <div className={styles.searchBox}>
+                <Search size={15}/>
+                <input
+                  className={styles.searchInput}
+                  placeholder="Search by email..."
+                  value={subSearch}
+                  onChange={e => setSubSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {subLoading ? (
+              <div className={styles.loading}>Loading subscribers...</div>
+            ) : filteredSubscribers.length === 0 ? (
+              <div className={styles.empty}>
+                <Mail size={48} strokeWidth={1} style={{ marginBottom: 12, opacity: .4 }} />
+                <p>{subSearch ? 'No subscribers match your search.' : 'No subscribers yet.'}</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Email</th>
+                      <th>Subscribed On</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSubscribers.map((s, i) => (
+                      <tr key={s.id}>
+                        <td style={{ color: 'var(--earth)', fontSize: '.8rem' }}>{i + 1}</td>
+                        <td>
+                          <a href={`mailto:${s.email}`} className={styles.emailLink}>
+                            📧 {s.email}
+                          </a>
+                        </td>
+                        <td style={{ fontSize: '.82rem', color: 'var(--earth)' }}>
+                          {s.subscribedAt
+                            ? new Date(s.subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : '—'}
+                        </td>
+                        <td>
+                          <button
+                            className={styles.deleteBtn}
+                            onClick={() => handleDeleteSubscriber(s.id)}
+                            title="Remove subscriber"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
       </main>
 
       {/* ── ADD/EDIT FORM MODAL ── */}
@@ -464,7 +551,6 @@ export default function Admin() {
                   <input type="number" value={form.reviewCount} onChange={e => setForm(f => ({ ...f, reviewCount: e.target.value }))} placeholder="124" />
                 </div>
 
-                {/* Image Upload Field */}
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>Product Image *</label>
                   <div className={styles.imageUploadRow}>
@@ -524,7 +610,7 @@ export default function Admin() {
             <div className={styles.modalFooter}>
               <button className={styles.cancelBtn} onClick={() => setShowForm(false)}>Cancel</button>
               <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving...' : <><Check size={16} /> {editId ? 'Update Product' : 'Add Product'}</>}
+                {saving ? 'Saving...' : <><Check size={16} /> {editId ? 'Update Product' : 'Add Product'}</> }
               </button>
             </div>
           </div>
