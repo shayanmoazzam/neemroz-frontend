@@ -1,16 +1,32 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import api from '../api'
 import styles from './Footer.module.css'
 
 export default function Footer() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail]       = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [subscribed, setSubscribed] = useState(false)
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault()
     if (!email.includes('@')) { toast.error('Enter a valid email'); return }
-    toast.success('Welcome to Ayezu Collection family! 🎉')
-    setEmail('')
+    setLoading(true)
+    try {
+      const res = await api.post('/newsletter/subscribe', { email })
+      if (res.data?.message === 'already_subscribed') {
+        toast('You are already subscribed! 😊', { icon: 'ℹ️' })
+      } else {
+        toast.success('Welcome to Ayezu Collection family! 🎉')
+        setSubscribed(true)
+      }
+      setEmail('')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -22,16 +38,23 @@ export default function Footer() {
             <h3>Get Exclusive Offers & New Arrivals</h3>
             <p>Join our growing family. Be the first to know about new collections, flash sales and special offers.</p>
           </div>
-          <form className={styles.nlForm} onSubmit={handleSubscribe}>
-            <input
-              type="email"
-              placeholder="Enter your email address"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className={styles.nlInput}
-            />
-            <button type="submit" className={styles.nlBtn}>Subscribe</button>
-          </form>
+          {subscribed ? (
+            <div className={styles.subscribedMsg}>✅ You're subscribed! Thank you 🎉</div>
+          ) : (
+            <form className={styles.nlForm} onSubmit={handleSubscribe}>
+              <input
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className={styles.nlInput}
+                disabled={loading}
+              />
+              <button type="submit" className={styles.nlBtn} disabled={loading}>
+                {loading ? 'Subscribing...' : 'Subscribe'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
 
@@ -58,15 +81,15 @@ export default function Footer() {
         </div>
 
         <div className={styles.col}>
-  <h4>Help</h4>
-  <ul>
-    <li><Link to="/faqs">FAQs</Link></li>
-    <li><Link to="/shipping-info">Shipping Info</Link></li>
-    <li><Link to="/returns-refunds">Returns & Refunds</Link></li>
-    <li><Link to="/size-guide">Size Guide</Link></li>
-    <li><Link to="/track-order">Track Order</Link></li>
-  </ul>
-</div>
+          <h4>Help</h4>
+          <ul>
+            <li><Link to="/faqs">FAQs</Link></li>
+            <li><Link to="/shipping-info">Shipping Info</Link></li>
+            <li><Link to="/returns-refunds">Returns & Refunds</Link></li>
+            <li><Link to="/size-guide">Size Guide</Link></li>
+            <li><Link to="/track-order">Track Order</Link></li>
+          </ul>
+        </div>
 
         <div className={styles.col}>
           <h4>Contact</h4>
