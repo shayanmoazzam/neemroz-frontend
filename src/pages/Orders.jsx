@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Package, ChevronRight, Clock, CheckCircle, Truck, XCircle, AlertTriangle, X } from 'lucide-react'
+import {
+  Package, ChevronDown, ChevronUp,
+  Clock, CheckCircle, Truck, XCircle,
+  AlertTriangle, X, MapPin, CreditCard
+} from 'lucide-react'
 import api from '../api'
 import toast from 'react-hot-toast'
 import styles from './Orders.module.css'
 
 const STATUS_CONFIG = {
   pending:    { label: 'Pending',    icon: Clock,        color: '#856404', bg: '#fff3cd' },
-  processing: { label: 'Processing', icon: Package,      color: '#0c63e4', bg: '#cfe2ff' },
   confirmed:  { label: 'Confirmed',  icon: CheckCircle,  color: '#0c63e4', bg: '#cfe2ff' },
+  processing: { label: 'Processing', icon: Package,      color: '#0c63e4', bg: '#cfe2ff' },
   shipped:    { label: 'Shipped',    icon: Truck,        color: '#0a3622', bg: '#d1e7dd' },
   delivered:  { label: 'Delivered',  icon: CheckCircle,  color: '#0a3622', bg: '#d1e7dd' },
   cancelled:  { label: 'Cancelled',  icon: XCircle,      color: '#842029', bg: '#f8d7da' },
@@ -19,6 +23,7 @@ const CANCELLABLE = ['pending', 'confirmed', 'processing']
 export default function Orders() {
   const [orders, setOrders]             = useState([])
   const [loading, setLoading]           = useState(true)
+  const [expanded, setExpanded]         = useState({})
   const [cancelModal, setCancelModal]   = useState(null)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelling, setCancelling]     = useState(false)
@@ -31,6 +36,9 @@ export default function Orders() {
       .finally(() => setLoading(false))
   }, [])
 
+  const toggleExpand = (id) =>
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
+
   const handleCancel = async () => {
     if (!cancelReason.trim()) { toast.error('Please provide a reason'); return }
     setCancelling(true)
@@ -38,7 +46,7 @@ export default function Orders() {
       await api.patch(`/orders/${cancelModal.id}/cancel`, { reason: cancelReason.trim() })
       setOrders(prev => prev.map(o =>
         o.id === cancelModal.id
-          ? { ...o, status: 'CANCELLED', cancelReason: cancelReason.trim() }
+          ? { ...o, status: 'cancelled', cancelReason: cancelReason.trim() }
           : o
       ))
       toast.success('Order cancelled successfully')
@@ -81,67 +89,146 @@ export default function Orders() {
       ) : (
         <div className={styles.list}>
           {orders.map(order => {
-            // Normalize status to lowercase for consistent comparison
             const statusKey = (order.status || '').toLowerCase()
             const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.pending
             const Icon = cfg.icon
             const canCancel = CANCELLABLE.includes(statusKey)
+            const isExpanded = !!expanded[order.id]
 
             return (
               <div key={order.id} className={styles.card}>
-                <div className={styles.cardTop} onClick={() => navigate(`/track-order?id=${order.id}`)}>
-                  <div className={styles.orderId}>Order #{order.id}</div>
-                  <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>
-                    <Icon size={12} /> {cfg.label}
-                  </span>
-                </div>
 
-                <div className={styles.cardItems} onClick={() => navigate(`/track-order?id=${order.id}`)}>
-                  {order.items?.slice(0, 2).map((item, i) => (
-                    <div key={i} className={styles.itemRow}>
-                      <img
-                        src={item.imageUrl || item.product?.imageUrl}
-                        alt={item.name || item.product?.name}
-                        className={styles.itemImg}
-                      />
-                      <div className={styles.itemInfo}>
-                        <div className={styles.itemName}>{item.name || item.product?.name}</div>
-                        <div className={styles.itemMeta}>Qty: {item.quantity} · ₹{item.price?.toLocaleString('en-IN')}</div>
-                      </div>
+                {/* ── TOP ROW ── */}
+                <div className={styles.cardTop} onClick={() => toggleExpand(order.id)}>
+                  <div>
+                    <div className={styles.orderId}>Order #{order.id}</div>
+                    <div className={styles.orderMeta}>
+                      {order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : ''}
                     </div>
-                  ))}
-                  {order.items?.length > 2 && (
-                    <div className={styles.moreItems}>+{order.items.length - 2} more item{order.items.length - 2 > 1 ? 's' : ''}</div>
-                  )}
-                </div>
-
-                <div className={styles.cardFooter}>
-                  <div
-                    onClick={() => navigate(`/track-order?id=${order.id}`)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, cursor: 'pointer' }}
-                  >
-                    <div className={styles.orderTotal}>Total: <strong>₹{(order.totalAmount ?? order.total)?.toLocaleString('en-IN')}</strong></div>
-                    <div className={styles.orderDate}>
-                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
-                    </div>
-                    <ChevronRight size={16} className={styles.chevron} />
                   </div>
-
-                  {canCancel && (
-                    <button
-                      className={styles.cancelOrderBtn}
-                      onClick={e => { e.stopPropagation(); setCancelModal(order); setCancelReason('') }}
-                    >
-                      <XCircle size={14} /> Cancel
-                    </button>
-                  )}
+                  <div className={styles.cardTopRight}>
+                    <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>
+                      <Icon size={12} /> {cfg.label}
+                    </span>
+                    {isExpanded
+                      ? <ChevronUp size={16} className={styles.chevron} />
+                      : <ChevronDown size={16} className={styles.chevron} />}
+                  </div>
                 </div>
 
-                {statusKey === 'cancelled' && order.cancelReason && (
-                  <div className={styles.cancelledNote}>
-                    Reason: {order.cancelReason}
+                {/* ── ITEMS PREVIEW (collapsed) ── */}
+                {!isExpanded && (
+                  <div className={styles.cardItems}>
+                    {order.items?.slice(0, 2).map((item, i) => (
+                      <div key={i} className={styles.itemRow}>
+                        <img src={item.imageUrl} alt={item.name} className={styles.itemImg} />
+                        <div className={styles.itemInfo}>
+                          <div className={styles.itemName}>{item.name}</div>
+                          <div className={styles.itemMeta}>Qty: {item.quantity} · ₹{item.price?.toLocaleString('en-IN')}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {order.items?.length > 2 && (
+                      <div className={styles.moreItems}>+{order.items.length - 2} more item{order.items.length - 2 > 1 ? 's' : ''}</div>
+                    )}
                   </div>
                 )}
+
+                {/* ── EXPANDED DETAILS ── */}
+                {isExpanded && (
+                  <div className={styles.detailsPanel}>
+
+                    {/* All items */}
+                    <div className={styles.detailSection}>
+                      <div className={styles.detailLabel}>Items Ordered</div>
+                      {order.items?.map((item, i) => (
+                        <div key={i} className={styles.itemRowFull}>
+                          <img src={item.imageUrl} alt={item.name} className={styles.itemImgLg} />
+                          <div className={styles.itemInfo}>
+                            <div className={styles.itemName}>{item.name}</div>
+                            <div className={styles.itemMeta}>
+                              Qty: {item.quantity}
+                              {item.selectedSize && <> · Size: {item.selectedSize}</>}
+                              {item.selectedColor && (
+                                <span className={styles.colorDot} style={{ background: item.selectedColor }} />
+                              )}
+                            </div>
+                            <div className={styles.itemPrice}>₹{item.price?.toLocaleString('en-IN')} each</div>
+                          </div>
+                          <div className={styles.itemTotal}>₹{item.totalPrice?.toLocaleString('en-IN')}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Price breakdown */}
+                    <div className={styles.detailSection}>
+                      <div className={styles.detailLabel}>Price Details</div>
+                      <div className={styles.priceRow}><span>Subtotal</span><span>₹{order.subtotal?.toLocaleString('en-IN')}</span></div>
+                      <div className={styles.priceRow}>
+                        <span>Shipping</span>
+                        <span>{order.shippingCharge === 0 || order.shippingCharge === '0.00' ? <span className={styles.freeTag}>FREE</span> : `₹${order.shippingCharge}`}</span>
+                      </div>
+                      <div className={`${styles.priceRow} ${styles.priceTotal}`}>
+                        <span>Total</span><span>₹{order.totalAmount?.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    {/* Shipping address */}
+                    <div className={styles.detailSection}>
+                      <div className={styles.detailLabel}><MapPin size={13}/> Delivery Address</div>
+                      <div className={styles.addressBox}>
+                        <div className={styles.addressName}>{order.shippingName}</div>
+                        <div className={styles.addressText}>
+                          {order.shippingAddress}, {order.shippingCity}, {order.shippingState} — {order.shippingPinCode}
+                        </div>
+                        <div className={styles.addressPhone}>{order.shippingPhone}</div>
+                      </div>
+                    </div>
+
+                    {/* Payment */}
+                    <div className={styles.detailSection}>
+                      <div className={styles.detailLabel}><CreditCard size={13}/> Payment</div>
+                      <div className={styles.payRow}>
+                        <span className={styles.payMethod}>{order.paymentMethod}</span>
+                        <span className={styles.payStatus} style={{
+                          color: order.paymentStatus === 'paid' ? '#0a3622' : '#856404',
+                          background: order.paymentStatus === 'paid' ? '#d1e7dd' : '#fff3cd',
+                        }}>{order.paymentStatus}</span>
+                      </div>
+                    </div>
+
+                    {/* Cancel reason if cancelled */}
+                    {statusKey === 'cancelled' && order.cancelReason && (
+                      <div className={styles.cancelledNote}>Reason: {order.cancelReason}</div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className={styles.detailActions}>
+                      {canCancel && (
+                        <button
+                          className={styles.cancelOrderBtn}
+                          onClick={e => { e.stopPropagation(); setCancelModal(order); setCancelReason('') }}
+                        >
+                          <XCircle size={14} /> Cancel Order
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── FOOTER (total + collapse) ── */}
+                <div className={styles.cardFooter} onClick={() => toggleExpand(order.id)}>
+                  <div className={styles.orderTotal}>
+                    Total: <strong>₹{order.totalAmount?.toLocaleString('en-IN')}</strong>
+                  </div>
+                  <div className={styles.viewDetails}>
+                    {isExpanded ? 'Hide Details' : 'View Details'}
+                    {isExpanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                  </div>
+                </div>
+
               </div>
             )
           })}
