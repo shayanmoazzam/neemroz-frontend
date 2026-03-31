@@ -1,5 +1,5 @@
 import React from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { Home, ShoppingBag, Heart, ShoppingCart, User } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useWishlist } from '../context/WishlistContext'
@@ -11,14 +11,26 @@ export default function BottomNav() {
   const { wishlist } = useWishlist()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  const handleHome = () => {
+    if (pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      navigate('/')
+    }
+  }
 
   return (
     <nav className={styles.nav}>
 
-      <NavLink to="/" end className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+      <button
+        className={`${styles.item} ${pathname === '/' ? styles.active : ''}`}
+        onClick={handleHome}
+      >
         <Home size={22} />
         <span>Home</span>
-      </NavLink>
+      </button>
 
       <NavLink to="/shop" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
         <ShoppingBag size={22} />
