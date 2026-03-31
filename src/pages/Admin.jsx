@@ -79,17 +79,27 @@ export default function Admin() {
 
   const [authChecked, setAuthChecked] = useState(false)
 
-  // ── FIX: Lock body scroll whenever any modal is open ──────────
+  // ── FIX: Lock scroll on BOTH html + body (required for iOS Safari) ──
   const anyModalOpen = showForm || showCouponForm || !!delConfirm || !!delCouponConfirm
   useEffect(() => {
     if (anyModalOpen) {
+      const scrollY = window.scrollY
+      document.documentElement.style.overflow = 'hidden'
       document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      return () => {
+        document.documentElement.style.overflow = ''
+        document.body.style.overflow = ''
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        window.scrollTo(0, scrollY)
+      }
     }
-    return () => { document.body.style.overflow = '' }
   }, [anyModalOpen])
-  // ──────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const timer = setTimeout(() => setAuthChecked(true), 0)

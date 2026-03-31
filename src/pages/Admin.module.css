@@ -395,14 +395,16 @@
   background: rgba(0,0,0,.5);
   display: flex; align-items: center; justify-content: center;
   z-index: 1000; padding: 16px;
-  /* prevent overlay itself from scrolling */
   overflow: hidden;
+  /* Prevent touch scroll bleeding out on iOS */
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 .modal {
   background: var(--white);
   border-radius: 18px;
   width: 100%; max-width: 680px;
-  /* FIX: flex column so footer stays pinned at bottom */
+  /* flex column: header + footer are sticky, only body scrolls */
   display: flex;
   flex-direction: column;
   max-height: 90vh;
@@ -413,7 +415,6 @@
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--sand);
-  /* FIX: header stays pinned at top */
   flex-shrink: 0;
   background: var(--white);
   z-index: 1;
@@ -423,11 +424,15 @@
   font-size: 1.4rem; font-weight: 400; color: var(--deep); margin: 0;
 }
 .modalClose { background: none; border: none; cursor: pointer; color: var(--earth); }
-/* FIX: only the body scrolls */
+/* Only the body scrolls — header and footer stay pinned */
 .modalBody {
   padding: 20px 24px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   flex: 1;
+  /* Allow touch scroll inside modal body */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
 }
 .formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .formGroup { display: flex; flex-direction: column; gap: 5px; }
@@ -447,7 +452,7 @@
 .formGroup select:focus,
 .formGroup textarea:focus { border-color: var(--accent); }
 .fullWidth { grid-column: 1 / -1; }
-/* FIX: footer always visible at bottom, never scrolls away */
+/* Footer always visible — never scrolls away */
 .modalFooter {
   display: flex; justify-content: flex-end; gap: 10px;
   padding: 16px 24px;
@@ -724,7 +729,7 @@
   .subscriberDate { font-size: .72rem; color: var(--earth); white-space: nowrap; }
   .emailLink { font-size: .8rem; word-break: break-all; }
 
-  /* FIX: modal slides up from bottom on mobile */
+  /* Modal slides up from bottom on mobile */
   .modalOverlay { padding: 0; align-items: flex-end; }
   .modal {
     border-radius: 18px 18px 0 0;
@@ -734,7 +739,13 @@
   .modalHeader { padding: 16px 16px 12px; }
   .modalHeader h2 { font-size: 1.15rem; }
   .modalBody  { padding: 14px 16px; }
-  .modalFooter { padding: 12px 16px; flex-direction: column; gap: 8px; }
+  .modalFooter {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 8px;
+    /* Extra bottom padding for iPhone home indicator */
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
   .saveBtn, .cancelBtn { width: 100%; justify-content: center; }
 
   .formGrid { grid-template-columns: 1fr; gap: 12px; }
