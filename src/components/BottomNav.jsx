@@ -6,25 +6,41 @@ import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
 import styles from './BottomNav.module.css'
 
-// Fires a custom event so Navbar's drawer closes whenever BottomNav is tapped
+// Close the left drawer (Navbar) and reset its body-overflow lock
 const closeDrawer = () => {
   document.body.style.overflow = ''
   window.dispatchEvent(new CustomEvent('closeMobileMenu'))
 }
 
 export default function BottomNav() {
-  const { cartCount, setCartOpen } = useCart()
+  const { cartCount, setCartOpen, cartOpen } = useCart()
   const { wishlist } = useWishlist()
   const { user } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
 
-  const handleHome = () => {
+  // Close cart sidebar and restore body scroll (position:fixed lock)
+  const closeCart = () => {
+    if (cartOpen) {
+      // CartSidebar locks scroll via position:fixed — mirror its cleanup
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.left = ''
+      document.body.style.right = ''
+      document.body.style.overflowY = ''
+      if (scrollY) window.scrollTo(0, parseInt(scrollY || '0') * -1)
+      setCartOpen(false)
+    }
+  }
+
+  const handleNav = (to) => {
     closeDrawer()
-    if (pathname === '/') {
+    closeCart()
+    if (to === '/' && pathname === '/') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      navigate('/')
+    } else if (to) {
+      navigate(to)
     }
   }
 
@@ -38,7 +54,7 @@ export default function BottomNav() {
 
       <button
         className={`${styles.item} ${pathname === '/' ? styles.active : ''}`}
-        onClick={handleHome}
+        onClick={() => handleNav('/')}
       >
         <Home size={22} />
         <span>Home</span>
@@ -46,7 +62,7 @@ export default function BottomNav() {
 
       <NavLink
         to="/shop"
-        onClick={closeDrawer}
+        onClick={() => handleNav(null)}
         className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
       >
         <ShoppingBag size={22} />
@@ -55,7 +71,7 @@ export default function BottomNav() {
 
       <NavLink
         to="/wishlist"
-        onClick={closeDrawer}
+        onClick={() => handleNav(null)}
         className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
       >
         <div className={styles.iconWrap}>
@@ -75,7 +91,7 @@ export default function BottomNav() {
 
       <NavLink
         to={user ? '/orders' : '/login'}
-        onClick={closeDrawer}
+        onClick={() => handleNav(null)}
         className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
       >
         <User size={22} />
