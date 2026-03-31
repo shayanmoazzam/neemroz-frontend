@@ -6,6 +6,12 @@ import { useWishlist } from '../context/WishlistContext'
 import { useAuth } from '../context/AuthContext'
 import styles from './BottomNav.module.css'
 
+// Fires a custom event so Navbar's drawer closes whenever BottomNav is tapped
+const closeDrawer = () => {
+  document.body.style.overflow = ''
+  window.dispatchEvent(new CustomEvent('closeMobileMenu'))
+}
+
 export default function BottomNav() {
   const { cartCount, setCartOpen } = useCart()
   const { wishlist } = useWishlist()
@@ -14,11 +20,17 @@ export default function BottomNav() {
   const { pathname } = useLocation()
 
   const handleHome = () => {
+    closeDrawer()
     if (pathname === '/') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       navigate('/')
     }
+  }
+
+  const handleCart = () => {
+    closeDrawer()
+    setCartOpen(true)
   }
 
   return (
@@ -32,12 +44,20 @@ export default function BottomNav() {
         <span>Home</span>
       </button>
 
-      <NavLink to="/shop" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+      <NavLink
+        to="/shop"
+        onClick={closeDrawer}
+        className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+      >
         <ShoppingBag size={22} />
         <span>Shop</span>
       </NavLink>
 
-      <NavLink to="/wishlist" className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}>
+      <NavLink
+        to="/wishlist"
+        onClick={closeDrawer}
+        className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
+      >
         <div className={styles.iconWrap}>
           <Heart size={22} />
           {wishlist.length > 0 && <span className={styles.badge}>{wishlist.length}</span>}
@@ -45,10 +65,7 @@ export default function BottomNav() {
         <span>Wishlist</span>
       </NavLink>
 
-      <button
-        className={styles.item}
-        onClick={() => setCartOpen(true)}
-      >
+      <button className={styles.item} onClick={handleCart}>
         <div className={styles.iconWrap}>
           <ShoppingCart size={22} />
           {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
@@ -58,6 +75,7 @@ export default function BottomNav() {
 
       <NavLink
         to={user ? '/orders' : '/login'}
+        onClick={closeDrawer}
         className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
       >
         <User size={22} />
