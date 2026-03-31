@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Package, ShoppingBag, Users, TrendingUp,
   Plus, Pencil, Trash2, X, Check, AlertTriangle,
-  ChevronDown, ChevronUp, Search, Upload, ImagePlus, Mail, Tag
+  ChevronDown, ChevronUp, Search, Upload, ImagePlus, Mail, Tag, GripVertical
 } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -12,20 +12,20 @@ import toast from 'react-hot-toast'
 
 const EMPTY_FORM = {
   name: '', description: '', price: '', oldPrice: '',
-  category: 'bedsheet', imageUrl: '', badge: '',
+  category: 'bedsheet', imageUrl: '', images: [], badge: '',
   sizes: '', colors: '', stock: '', rating: '4.5', reviewCount: ''
 }
 
 const EMPTY_COUPON = {
   code: '',
-  discountType: 'percentage',   // 'percentage' | 'flat'
+  discountType: 'percentage',
   discountValue: '',
   minOrderAmount: '',
   maxUses: '',
   expiresAt: '',
-  applicability: 'all',         // 'all' | 'category' | 'products'
-  applicableCategories: [],     // ['bedsheet','kids','women']
-  applicableProductIds: [],     // [1, 2, 3, ...]
+  applicability: 'all',
+  applicableCategories: [],
+  applicableProductIds: [],
   isActive: true,
 }
 
@@ -44,6 +44,8 @@ export default function Admin() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
+  const urlInputRef  = useRef(null)
+  const dragIndex    = useRef(null)
 
   const [tab, setTab]               = useState('dashboard')
   const [products, setProducts]     = useState([])
@@ -59,6 +61,7 @@ export default function Admin() {
   const [delConfirm, setDelConfirm] = useState(null)
   const [saving, setSaving]         = useState(false)
   const [uploading, setUploading]   = useState(false)
+  const [urlDraft, setUrlDraft]     = useState('')
   const [search, setSearch]         = useState('')
   const [orderSearch, setOrderSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -66,7 +69,6 @@ export default function Admin() {
   const [updatingStatus, setUpdatingStatus] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // Coupon state
   const [couponForm, setCouponForm]       = useState(EMPTY_COUPON)
   const [couponEditId, setCouponEditId]   = useState(null)
   const [showCouponForm, setShowCouponForm] = useState(false)
@@ -75,13 +77,9 @@ export default function Admin() {
   const [delCouponConfirm, setDelCouponConfirm] = useState(null)
   const [productSearch, setProductSearch] = useState('')
 
-  // --- FIX: Guard against null user during initial hydration ---
-  // Wait a tick so AuthContext can restore user from sessionStorage.
-  // Only redirect once we're sure user is resolved (not null due to loading).
   const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
-    // Give AuthContext one render cycle to hydrate user from sessionStorage
     const timer = setTimeout(() => setAuthChecked(true), 0)
     return () => clearTimeout(timer)
   }, [])
@@ -89,12 +87,10 @@ export default function Admin() {
   useEffect(() => {
     if (!authChecked) return
     if (!user) {
-      // Not logged in — send to login with redirect back to /admin
       navigate('/login?redirect=/admin', { replace: true })
       return
     }
     if (user.role?.toUpperCase() !== 'ADMIN') {
-      // Logged in but not admin — send home with a message
       toast.error('Access denied. Admin only.')
       navigate('/', { replace: true })
     }
@@ -116,7 +112,6 @@ export default function Admin() {
 
   useEffect(() => { loadData() }, [])
 
-  // Reload subscribers if tab opened and still empty
   useEffect(() => {
     if (tab === 'subscribers' && subscribers.length === 0) {
       setSubLoading(true)
@@ -127,7 +122,6 @@ export default function Admin() {
     }
   }, [tab])
 
-  // Reload coupons when tab opens
   useEffect(() => {
     if (tab === 'coupons') {
       api.get('/coupons')
@@ -146,18 +140,39 @@ export default function Admin() {
     }
   }
 
+  // ── MULTI-IMAGE HELPERS ──────────────────────────────────────
+  // Returns current images array (normalised from form state)
+  const getImages = () => {
+    const imgs = Array.isArray(form.images) ? [...form.images] : []
+    // Keep backward-compat: if imageUrl exists but not in array, prepend it
+    if (form.imageUrl && !imgs.includes(form.imageUrl)) imgs.unshift(form.imageUrl)
+    return imgs
+  }
+
+  const setImages = (imgs) => {
+    setForm(f => ({
+      ...f,
+      images: imgs,
+      imageUrl: imgs[0] || '',   // first image is always the primary
+    }))
+  }
+
+  // Upload a file and add to gallery
   const handleImageUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const files = Array.from(e.target.files)
+    if (!files.length) return
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-      setForm(f => ({ ...f, imageUrl: res.data.url }))
-      toast.success('Image uploaded!')
+      const uploaded = await Promise.all(files.map(async (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        const res = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        return res.data.url
+      }))
+      setImages([...getImages(), ...uploaded])
+      toast.success(`${uploaded.length} image${uploaded.length > 1 ? 's' : ''} uploaded!`)
     } catch {
       toast.error('Image upload failed')
     } finally {
@@ -166,6 +181,36 @@ export default function Admin() {
     }
   }
 
+  // Add a URL manually
+  const handleAddUrl = () => {
+    const url = urlDraft.trim()
+    if (!url) return
+    if (getImages().includes(url)) {
+      toast.error('This URL is already added')
+      return
+    }
+    setImages([...getImages(), url])
+    setUrlDraft('')
+  }
+
+  const handleRemoveImage = (idx) => {
+    const imgs = getImages()
+    imgs.splice(idx, 1)
+    setImages(imgs)
+  }
+
+  // Drag-to-reorder
+  const handleDragStart = (idx) => { dragIndex.current = idx }
+  const handleDrop = (idx) => {
+    if (dragIndex.current === null || dragIndex.current === idx) return
+    const imgs = getImages()
+    const moved = imgs.splice(dragIndex.current, 1)[0]
+    imgs.splice(idx, 0, moved)
+    dragIndex.current = null
+    setImages(imgs)
+  }
+  // ────────────────────────────────────────────────────────────
+
   const stats = [
     { icon: <Package size={22}/>,     label: 'Total Products',  value: products.length,      color: '#8B0000' },
     { icon: <ShoppingBag size={22}/>, label: 'Total Orders',    value: orders.length,        color: '#C4622D' },
@@ -173,16 +218,36 @@ export default function Admin() {
     { icon: <Mail size={22}/>,        label: 'Subscribers',     value: subscribers.length,   color: '#6B21A8' },
   ]
 
-  const openAdd = () => { setForm(EMPTY_FORM); setEditId(null); setShowForm(true) }
+  const openAdd = () => { setForm(EMPTY_FORM); setUrlDraft(''); setEditId(null); setShowForm(true) }
   const openEdit = (p) => {
-    setForm({ ...p, sizes: p.sizes?.join(', ') || '', colors: p.colors?.join(', ') || '', oldPrice: p.oldPrice || '' })
-    setEditId(p.id); setShowForm(true)
+    // Normalise images: use p.images array if it exists, else fall back to imageUrl
+    const imgs = Array.isArray(p.images) && p.images.length
+      ? p.images
+      : (p.imageUrl ? [p.imageUrl] : [])
+    setForm({
+      ...p,
+      images: imgs,
+      imageUrl: imgs[0] || p.imageUrl || '',
+      sizes: p.sizes?.join(', ') || '',
+      colors: p.colors?.join(', ') || '',
+      oldPrice: p.oldPrice || ''
+    })
+    setUrlDraft('')
+    setEditId(p.id)
+    setShowForm(true)
   }
+
   const handleSave = async () => {
-    if (!form.name || !form.price || !form.imageUrl) return
+    const imgs = getImages()
+    if (!form.name || !form.price || imgs.length === 0) {
+      toast.error('Name, price and at least one image are required')
+      return
+    }
     setSaving(true)
     const payload = {
       ...form,
+      imageUrl: imgs[0],
+      images: imgs,
       price: Number(form.price), oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
       stock: Number(form.stock) || 0, rating: Number(form.rating) || 4.5,
       reviewCount: Number(form.reviewCount) || 0,
@@ -202,6 +267,7 @@ export default function Admin() {
     } catch { toast.error('Error saving product') }
     finally { setSaving(false) }
   }
+
   const handleDelete = async (id) => {
     try {
       await api.delete(`/products/${id}`)
@@ -346,6 +412,9 @@ export default function Admin() {
 
   if (loading) return <div className={styles.loading}>Loading admin panel...</div>
 
+  // Computed images for the open form
+  const formImages = getImages()
+
   return (
     <div className={styles.page}>
 
@@ -441,7 +510,6 @@ export default function Admin() {
               </div>
             </div>
 
-            {/* Desktop table */}
             <div className={`${styles.tableWrap} ${styles.desktopOnly}`}>
               <table className={styles.table}>
                 <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Badge</th><th>Actions</th></tr></thead>
@@ -466,7 +534,6 @@ export default function Admin() {
               </table>
             </div>
 
-            {/* Mobile cards */}
             <div className={`${styles.productCards} ${styles.mobileOnly}`}>
               {filteredProducts.length === 0 ? (
                 <div className={styles.empty}>No products found.</div>
@@ -659,34 +726,16 @@ export default function Admin() {
                   <tbody>
                     {filteredCoupons.map(c => (
                       <tr key={c.id}>
-                        <td>
-                          <span className={styles.couponCode}>{c.code}</span>
-                        </td>
-                        <td>
-                          {c.discountType === 'percentage'
-                            ? `${c.discountValue}% off`
-                            : `\u20b9${c.discountValue} off`}
-                        </td>
+                        <td><span className={styles.couponCode}>{c.code}</span></td>
+                        <td>{c.discountType === 'percentage' ? `${c.discountValue}% off` : `\u20b9${c.discountValue} off`}</td>
                         <td>
                           {c.applicability === 'all' && <span className={styles.catTag}>All Products</span>}
-                          {c.applicability === 'category' && (
-                            <span className={styles.catTag}>
-                              {(c.applicableCategories || []).join(', ') || 'No category'}
-                            </span>
-                          )}
-                          {c.applicability === 'products' && (
-                            <span className={styles.catTag}>
-                              {(c.applicableProductIds || []).length} product{(c.applicableProductIds || []).length !== 1 ? 's' : ''}
-                            </span>
-                          )}
+                          {c.applicability === 'category' && <span className={styles.catTag}>{(c.applicableCategories || []).join(', ') || 'No category'}</span>}
+                          {c.applicability === 'products' && <span className={styles.catTag}>{(c.applicableProductIds || []).length} product{(c.applicableProductIds || []).length !== 1 ? 's' : ''}</span>}
                         </td>
                         <td>{c.minOrderAmount > 0 ? `\u20b9${c.minOrderAmount}` : '\u2014'}</td>
-                        <td style={{ fontSize: '.82rem' }}>
-                          {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-IN') : '\u2014'}
-                        </td>
-                        <td style={{ fontSize: '.82rem' }}>
-                          {c.usedCount ?? 0}{c.maxUses ? ` / ${c.maxUses}` : ''}
-                        </td>
+                        <td style={{ fontSize: '.82rem' }}>{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-IN') : '\u2014'}</td>
+                        <td style={{ fontSize: '.82rem' }}>{c.usedCount ?? 0}{c.maxUses ? ` / ${c.maxUses}` : ''}</td>
                         <td>
                           <button
                             className={c.isActive ? styles.badgeTag : styles.catTag}
@@ -740,34 +789,17 @@ export default function Admin() {
             ) : (
               <div className={styles.tableWrap}>
                 <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Email</th>
-                      <th>Subscribed On</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>#</th><th>Email</th><th>Subscribed On</th><th>Action</th></tr></thead>
                   <tbody>
                     {filteredSubscribers.map((s, i) => (
                       <tr key={s.id}>
                         <td style={{ color: 'var(--earth)', fontSize: '.8rem' }}>{i + 1}</td>
-                        <td>
-                          <a href={`mailto:${s.email}`} className={styles.emailLink}>
-                            \ud83d\udce7 {s.email}
-                          </a>
-                        </td>
+                        <td><a href={`mailto:${s.email}`} className={styles.emailLink}>\ud83d\udce7 {s.email}</a></td>
                         <td style={{ fontSize: '.82rem', color: 'var(--earth)' }}>
-                          {s.subscribedAt
-                            ? new Date(s.subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : '\u2014'}
+                          {s.subscribedAt ? new Date(s.subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '\u2014'}
                         </td>
                         <td>
-                          <button
-                            className={styles.deleteBtn}
-                            onClick={() => handleDeleteSubscriber(s.id)}
-                            title="Remove subscriber"
-                          >
+                          <button className={styles.deleteBtn} onClick={() => handleDeleteSubscriber(s.id)} title="Remove subscriber">
                             <Trash2 size={14} />
                           </button>
                         </td>
@@ -829,18 +861,30 @@ export default function Admin() {
                   <input type="number" value={form.reviewCount} onChange={e => setForm(f => ({ ...f, reviewCount: e.target.value }))} placeholder="124" />
                 </div>
 
+                {/* ── MULTI-IMAGE SECTION ── */}
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                  <label>Product Image *</label>
+                  <label>
+                    Product Images *
+                    <span className={styles.imgCountBadge}>{formImages.length} added · first = primary</span>
+                  </label>
+
+                  {/* Upload + URL row */}
                   <div className={styles.imageUploadRow}>
                     <input
-                      value={form.imageUrl}
-                      onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
-                      placeholder="Paste URL or upload image below"
+                      value={urlDraft}
+                      onChange={e => setUrlDraft(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddUrl())}
+                      placeholder="Paste image URL and press Enter or Add"
                       className={styles.imageUrlInput}
+                      ref={urlInputRef}
                     />
+                    <button type="button" className={styles.addUrlBtn} onClick={handleAddUrl} disabled={!urlDraft.trim()}>
+                      + Add
+                    </button>
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       ref={fileInputRef}
                       style={{ display: 'none' }}
                       onChange={handleImageUpload}
@@ -853,21 +897,42 @@ export default function Admin() {
                     >
                       {uploading
                         ? <><span className={styles.spinner} /> Uploading...</>
-                        : <><ImagePlus size={15} /> Upload Image</>
+                        : <><ImagePlus size={15} /> Upload</>
                       }
                     </button>
                   </div>
-                  {form.imageUrl && (
-                    <div className={styles.imgPreviewInline}>
-                      <img src={form.imageUrl} alt="preview" />
-                      <button
-                        type="button"
-                        className={styles.removeImgBtn}
-                        onClick={() => setForm(f => ({ ...f, imageUrl: '' }))}
-                      >
-                        <X size={14} /> Remove
-                      </button>
+
+                  {/* Gallery grid */}
+                  {formImages.length > 0 && (
+                    <div className={styles.imgGallery}>
+                      {formImages.map((url, idx) => (
+                        <div
+                          key={idx}
+                          className={`${styles.imgGalleryItem} ${idx === 0 ? styles.imgGalleryPrimary : ''}`}
+                          draggable
+                          onDragStart={() => handleDragStart(idx)}
+                          onDragOver={e => e.preventDefault()}
+                          onDrop={() => handleDrop(idx)}
+                        >
+                          <img src={url} alt={`product-${idx}`} />
+                          {idx === 0 && <span className={styles.primaryBadge}>Primary</span>}
+                          <button
+                            type="button"
+                            className={styles.imgRemoveBtn}
+                            onClick={() => handleRemoveImage(idx)}
+                            title="Remove"
+                          >
+                            <X size={12} />
+                          </button>
+                          <div className={styles.imgDragHandle} title="Drag to reorder">
+                            <GripVertical size={13} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                  {formImages.length === 0 && (
+                    <p className={styles.imgHint}>Upload or paste URLs above. Drag thumbnails to reorder. First image is shown as the main product photo.</p>
                   )}
                 </div>
 
@@ -905,215 +970,91 @@ export default function Admin() {
             </div>
             <div className={styles.modalBody}>
               <div className={styles.formGrid}>
-
-                {/* Code */}
                 <div className={styles.formGroup}>
                   <label>Coupon Code *</label>
-                  <input
-                    value={couponForm.code}
-                    onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                    placeholder="e.g. NEEMROZ20"
-                    style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 1 }}
-                  />
+                  <input value={couponForm.code} onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="e.g. NEEMROZ20" style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 1 }} />
                 </div>
-
-                {/* Active toggle */}
                 <div className={styles.formGroup} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                   <label>Status</label>
-                  <button
-                    type="button"
-                    onClick={() => setCouponForm(f => ({ ...f, isActive: !f.isActive }))}
-                    style={{
-                      padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600,
-                      background: couponForm.isActive ? '#d1fae5' : '#fee2e2',
-                      color: couponForm.isActive ? '#065f46' : '#991b1b'
-                    }}
-                  >
+                  <button type="button" onClick={() => setCouponForm(f => ({ ...f, isActive: !f.isActive }))} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600, background: couponForm.isActive ? '#d1fae5' : '#fee2e2', color: couponForm.isActive ? '#065f46' : '#991b1b' }}>
                     {couponForm.isActive ? '\u2705 Active' : '\u274c Disabled'}
                   </button>
                 </div>
-
-                {/* Discount Type */}
                 <div className={styles.formGroup}>
                   <label>Discount Type *</label>
-                  <select
-                    value={couponForm.discountType}
-                    onChange={e => setCouponForm(f => ({ ...f, discountType: e.target.value }))}
-                  >
+                  <select value={couponForm.discountType} onChange={e => setCouponForm(f => ({ ...f, discountType: e.target.value }))}>
                     <option value="percentage">Percentage (%)</option>
                     <option value="flat">Flat Amount (\u20b9)</option>
                   </select>
                 </div>
-
-                {/* Discount Value */}
                 <div className={styles.formGroup}>
                   <label>Discount Value * {couponForm.discountType === 'percentage' ? '(%)' : '(\u20b9)'}</label>
-                  <input
-                    type="number"
-                    value={couponForm.discountValue}
-                    onChange={e => setCouponForm(f => ({ ...f, discountValue: e.target.value }))}
-                    placeholder={couponForm.discountType === 'percentage' ? 'e.g. 20' : 'e.g. 150'}
-                    min="1"
-                    max={couponForm.discountType === 'percentage' ? 100 : undefined}
-                  />
+                  <input type="number" value={couponForm.discountValue} onChange={e => setCouponForm(f => ({ ...f, discountValue: e.target.value }))} placeholder={couponForm.discountType === 'percentage' ? 'e.g. 20' : 'e.g. 150'} min="1" max={couponForm.discountType === 'percentage' ? 100 : undefined} />
                 </div>
-
-                {/* Min Order */}
                 <div className={styles.formGroup}>
                   <label>Min Order Amount (\u20b9)</label>
-                  <input
-                    type="number"
-                    value={couponForm.minOrderAmount}
-                    onChange={e => setCouponForm(f => ({ ...f, minOrderAmount: e.target.value }))}
-                    placeholder="e.g. 500 (optional)"
-                  />
+                  <input type="number" value={couponForm.minOrderAmount} onChange={e => setCouponForm(f => ({ ...f, minOrderAmount: e.target.value }))} placeholder="e.g. 500 (optional)" />
                 </div>
-
-                {/* Max Uses */}
                 <div className={styles.formGroup}>
                   <label>Max Uses (optional)</label>
-                  <input
-                    type="number"
-                    value={couponForm.maxUses}
-                    onChange={e => setCouponForm(f => ({ ...f, maxUses: e.target.value }))}
-                    placeholder="e.g. 100 (leave blank = unlimited)"
-                  />
+                  <input type="number" value={couponForm.maxUses} onChange={e => setCouponForm(f => ({ ...f, maxUses: e.target.value }))} placeholder="e.g. 100 (leave blank = unlimited)" />
                 </div>
-
-                {/* Expiry */}
                 <div className={styles.formGroup}>
                   <label>Expiry Date (optional)</label>
-                  <input
-                    type="date"
-                    value={couponForm.expiresAt}
-                    onChange={e => setCouponForm(f => ({ ...f, expiresAt: e.target.value }))}
-                  />
+                  <input type="date" value={couponForm.expiresAt} onChange={e => setCouponForm(f => ({ ...f, expiresAt: e.target.value }))} />
                 </div>
-
-                {/* Applicability */}
                 <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                   <label>\ud83c\udfaf Applicable To *</label>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
-                    {[
-                      { val: 'all',      label: '\ud83d\udce6 All Products' },
-                      { val: 'category', label: '\ud83c\udff7\ufe0f By Category' },
-                      { val: 'products', label: '\ud83d\udd0d Specific Products' },
-                    ].map(opt => (
-                      <button
-                        key={opt.val}
-                        type="button"
-                        onClick={() => setCouponForm(f => ({ ...f, applicability: opt.val }))}
-                        style={{
-                          padding: '7px 14px', borderRadius: 6, border: '2px solid',
-                          cursor: 'pointer', fontWeight: 600, fontSize: '.85rem',
-                          borderColor: couponForm.applicability === opt.val ? '#8B0000' : '#ddd',
-                          background: couponForm.applicability === opt.val ? '#fff0f0' : '#fff',
-                          color: couponForm.applicability === opt.val ? '#8B0000' : '#555',
-                        }}
-                      >
+                    {[{ val: 'all', label: '\ud83d\udce6 All Products' }, { val: 'category', label: '\ud83c\udff7\ufe0f By Category' }, { val: 'products', label: '\ud83d\udd0d Specific Products' }].map(opt => (
+                      <button key={opt.val} type="button" onClick={() => setCouponForm(f => ({ ...f, applicability: opt.val }))} style={{ padding: '7px 14px', borderRadius: 6, border: '2px solid', cursor: 'pointer', fontWeight: 600, fontSize: '.85rem', borderColor: couponForm.applicability === opt.val ? '#8B0000' : '#ddd', background: couponForm.applicability === opt.val ? '#fff0f0' : '#fff', color: couponForm.applicability === opt.val ? '#8B0000' : '#555' }}>
                         {opt.label}
                       </button>
                     ))}
                   </div>
                 </div>
-
-                {/* Category selector */}
                 {couponForm.applicability === 'category' && (
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
                     <label>Select Categories</label>
                     <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
                       {ALL_CATEGORIES.map(cat => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => toggleCategory(cat)}
-                          style={{
-                            padding: '6px 14px', borderRadius: 20, border: '2px solid', cursor: 'pointer',
-                            fontWeight: 600, textTransform: 'capitalize', fontSize: '.85rem',
-                            borderColor: couponForm.applicableCategories.includes(cat) ? '#8B0000' : '#ddd',
-                            background: couponForm.applicableCategories.includes(cat) ? '#fff0f0' : '#f9f9f9',
-                            color: couponForm.applicableCategories.includes(cat) ? '#8B0000' : '#555',
-                          }}
-                        >
-                          {couponForm.applicableCategories.includes(cat) ? '\u2713 ' : ''}
-                          {cat === 'bedsheet' ? 'Bed Sheet' : cat === 'kids' ? 'Kids Wear' : 'Women Wear'}
+                        <button key={cat} type="button" onClick={() => toggleCategory(cat)} style={{ padding: '6px 14px', borderRadius: 20, border: '2px solid', cursor: 'pointer', fontWeight: 600, textTransform: 'capitalize', fontSize: '.85rem', borderColor: couponForm.applicableCategories.includes(cat) ? '#8B0000' : '#ddd', background: couponForm.applicableCategories.includes(cat) ? '#fff0f0' : '#f9f9f9', color: couponForm.applicableCategories.includes(cat) ? '#8B0000' : '#555' }}>
+                          {couponForm.applicableCategories.includes(cat) ? '\u2713 ' : ''}{cat === 'bedsheet' ? 'Bed Sheet' : cat === 'kids' ? 'Kids Wear' : 'Women Wear'}
                         </button>
                       ))}
                     </div>
-                    {couponForm.applicableCategories.length === 0 && (
-                      <p style={{ fontSize: '.8rem', color: '#e53e3e', marginTop: 6 }}>Please select at least one category.</p>
-                    )}
+                    {couponForm.applicableCategories.length === 0 && <p style={{ fontSize: '.8rem', color: '#e53e3e', marginTop: 6 }}>Please select at least one category.</p>}
                   </div>
                 )}
-
-                {/* Product multi-selector */}
                 {couponForm.applicability === 'products' && (
                   <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                    <label>
-                      Select Products
-                      <span style={{ fontWeight: 400, color: '#888', marginLeft: 8 }}>
-                        ({couponForm.applicableProductIds.length} selected)
-                      </span>
-                    </label>
+                    <label>Select Products <span style={{ fontWeight: 400, color: '#888', marginLeft: 8 }}>({couponForm.applicableProductIds.length} selected)</span></label>
                     <div className={styles.searchBox} style={{ marginTop: 8, marginBottom: 8 }}>
                       <Search size={13} />
-                      <input
-                        className={styles.searchInput}
-                        placeholder="Search products..."
-                        value={productSearch}
-                        onChange={e => setProductSearch(e.target.value)}
-                      />
+                      <input className={styles.searchInput} placeholder="Search products..." value={productSearch} onChange={e => setProductSearch(e.target.value)} />
                     </div>
-                    <div style={{
-                      maxHeight: 260, overflowY: 'auto', border: '1px solid #e5e7eb',
-                      borderRadius: 8, background: '#fafafa'
-                    }}>
+                    <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fafafa' }}>
                       {modalFilteredProducts.length === 0 ? (
                         <div style={{ padding: 16, color: '#888', textAlign: 'center' }}>No products found</div>
                       ) : modalFilteredProducts.map(p => {
                         const selected = couponForm.applicableProductIds.includes(p.id)
                         return (
-                          <div
-                            key={p.id}
-                            onClick={() => toggleProduct(p.id)}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 10,
-                              padding: '9px 12px', cursor: 'pointer',
-                              borderBottom: '1px solid #f0f0f0',
-                              background: selected ? '#fff0f0' : 'transparent',
-                              transition: 'background .15s',
-                            }}
-                          >
-                            <div style={{
-                              width: 18, height: 18, borderRadius: 4, border: '2px solid',
-                              borderColor: selected ? '#8B0000' : '#ccc',
-                              background: selected ? '#8B0000' : '#fff',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              flexShrink: 0
-                            }}>
+                          <div key={p.id} onClick={() => toggleProduct(p.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0', background: selected ? '#fff0f0' : 'transparent', transition: 'background .15s' }}>
+                            <div style={{ width: 18, height: 18, borderRadius: 4, border: '2px solid', borderColor: selected ? '#8B0000' : '#ccc', background: selected ? '#8B0000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               {selected && <Check size={11} color="#fff" />}
                             </div>
-                            <img
-                              src={p.imageUrl}
-                              alt={p.name}
-                              style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
-                            />
+                            <img src={p.imageUrl} alt={p.name} style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontWeight: 600, fontSize: '.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                              <div style={{ fontSize: '.78rem', color: '#888', textTransform: 'capitalize' }}>
-                                {p.category} \u00b7 \u20b9{p.price?.toLocaleString('en-IN')}
-                              </div>
+                              <div style={{ fontSize: '.78rem', color: '#888', textTransform: 'capitalize' }}>{p.category} \u00b7 \u20b9{p.price?.toLocaleString('en-IN')}</div>
                             </div>
                           </div>
                         )
                       })}
                     </div>
-                    {couponForm.applicableProductIds.length === 0 && (
-                      <p style={{ fontSize: '.8rem', color: '#e53e3e', marginTop: 6 }}>Please select at least one product.</p>
-                    )}
+                    {couponForm.applicableProductIds.length === 0 && <p style={{ fontSize: '.8rem', color: '#e53e3e', marginTop: 6 }}>Please select at least one product.</p>}
                   </div>
                 )}
-
               </div>
             </div>
             <div className={styles.modalFooter}>
