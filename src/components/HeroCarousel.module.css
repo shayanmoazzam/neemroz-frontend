@@ -5,6 +5,7 @@
   max-height: 720px;
   overflow: hidden;
   background: var(--deep);
+  isolation: isolate;
 }
 
 /* ── SLIDES ── */
@@ -169,7 +170,9 @@
 /* ── PROGRESS BAR ── */
 .progress {
   position: absolute; bottom: 0; left: 0; right: 0;
-  height: 3px; background: rgba(255,255,255,.15); z-index: 3;
+  height: 3px;
+  background: transparent;
+  z-index: 3;
 }
 .progressBar {
   height: 100%; background: var(--accent);
