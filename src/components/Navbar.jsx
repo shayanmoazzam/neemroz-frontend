@@ -54,6 +54,13 @@ export default function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
+  // Listen for BottomNav taps — close drawer from outside
+  useEffect(() => {
+    const handler = () => setMenuOpen(false)
+    window.addEventListener('closeMobileMenu', handler)
+    return () => window.removeEventListener('closeMobileMenu', handler)
+  }, [])
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (!searchQ.trim()) return
