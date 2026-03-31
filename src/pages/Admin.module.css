@@ -395,10 +395,10 @@
   background: rgba(0,0,0,.5);
   display: flex; align-items: center; justify-content: center;
   z-index: 1000; padding: 16px;
+  /* FIX: Allow the overlay itself to scroll if needed but contain it */
   overflow: hidden;
-  /* Prevent touch scroll bleeding out on iOS */
   overscroll-behavior: contain;
-  touch-action: none;
+  /* FIX: Do NOT set touch-action:none on overlay — it blocks modal body scroll on iOS */
 }
 .modal {
   background: var(--white);
@@ -407,7 +407,8 @@
   /* flex column: header + footer are sticky, only body scrolls */
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
+  /* FIX: Use calc to always leave room so footer is never cut off */
+  max-height: min(90vh, calc(100dvh - 32px));
   box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
@@ -415,6 +416,7 @@
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--sand);
+  /* FIX: flex-shrink:0 ensures header never shrinks — always visible */
   flex-shrink: 0;
   background: var(--white);
   z-index: 1;
@@ -424,13 +426,15 @@
   font-size: 1.4rem; font-weight: 400; color: var(--deep); margin: 0;
 }
 .modalClose { background: none; border: none; cursor: pointer; color: var(--earth); }
-/* Only the body scrolls — header and footer stay pinned */
+
+/* FIX: Only the body scrolls — header and footer stay pinned */
 .modalBody {
   padding: 20px 24px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   flex: 1;
-  /* Allow touch scroll inside modal body */
+  min-height: 0; /* FIX: critical — without this, flex children don't shrink & footer gets pushed off */
+  /* FIX: Allow touch scroll inside modal body without being blocked by overlay */
   touch-action: pan-y;
   overscroll-behavior: contain;
 }
@@ -452,12 +456,13 @@
 .formGroup select:focus,
 .formGroup textarea:focus { border-color: var(--accent); }
 .fullWidth { grid-column: 1 / -1; }
-/* Footer always visible — never scrolls away */
+
+/* FIX: Footer always visible — flex-shrink:0 keeps it pinned at bottom */
 .modalFooter {
   display: flex; justify-content: flex-end; gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid var(--sand);
-  flex-shrink: 0;
+  flex-shrink: 0; /* FIX: never let footer shrink or get pushed off screen */
   background: var(--white);
 }
 
@@ -729,11 +734,12 @@
   .subscriberDate { font-size: .72rem; color: var(--earth); white-space: nowrap; }
   .emailLink { font-size: .8rem; word-break: break-all; }
 
-  /* Modal slides up from bottom on mobile */
+  /* FIX: Modal slides up from bottom on mobile */
   .modalOverlay { padding: 0; align-items: flex-end; }
   .modal {
     border-radius: 18px 18px 0 0;
-    max-height: 92vh;
+    /* FIX: use 92dvh so it accounts for dynamic browser chrome (address bar) */
+    max-height: 92dvh;
     max-width: 100%;
   }
   .modalHeader { padding: 16px 16px 12px; }
@@ -743,8 +749,8 @@
     padding: 12px 16px;
     flex-direction: column;
     gap: 8px;
-    /* Extra bottom padding for iPhone home indicator */
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    /* FIX: Safe area for iPhone home indicator — footer is always above it */
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
   .saveBtn, .cancelBtn { width: 100%; justify-content: center; }
 
