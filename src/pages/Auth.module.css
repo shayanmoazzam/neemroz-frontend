@@ -13,6 +13,23 @@
   max-width: 520px;
   width: 100%;
 }
+
+/* ── Back to Home arrow link ── */
+.backHome {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--earth);
+  text-decoration: none;
+  margin-bottom: 28px;
+  transition: color .2s;
+  width: fit-content;
+}
+.backHome:hover { color: var(--accent); }
+.backHome svg { flex-shrink: 0; }
+
 .logo {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.7rem;
@@ -48,7 +65,7 @@
   border: 1.5px solid var(--sand);
   border-radius: 10px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 1rem; /* 16px — prevents iOS Safari auto-zoom on focus */
+  font-size: 1rem;
   color: var(--ink);
   background: var(--white);
   outline: none;
@@ -74,6 +91,36 @@
 }
 .switchText a { color: var(--accent); font-weight: 500; }
 .switchText a:hover { text-decoration: underline; }
+
+/* ── Browse without login ── */
+.browseGuest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--sand);
+  font-size: .82rem;
+  color: var(--earth);
+}
+.browseBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1.5px solid var(--accent);
+  border-radius: 50px;
+  transition: background .2s, color .2s;
+}
+.browseBtn:hover {
+  background: var(--accent);
+  color: #fff;
+}
 
 .imgPanel {
   position: relative;
@@ -111,8 +158,10 @@
 @media (max-width: 760px) {
   .page { grid-template-columns: 1fr; }
   .imgPanel { display: none; }
-  .box { max-width: 100%; padding: 48px 6%; }
+  .box { max-width: 100%; padding: 40px 6% 60px; }
   .row { grid-template-columns: 1fr; }
+  .backHome { margin-bottom: 20px; }
+  .browseGuest { flex-direction: column; gap: 8px; }
 }
 
 .loginPrompt {
