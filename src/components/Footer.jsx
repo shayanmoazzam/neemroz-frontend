@@ -61,7 +61,7 @@ export default function Footer() {
       <div className={styles.main}>
         <div className={styles.brand}>
           <div className={styles.logo}>Ayezu <span>Collection</span></div>
-          <p>Premium quality bedsheets, kids wear and women wear. Crafted with love, delivered with care.</p>
+          <p>Premium quality Saree Suits, Lehenga &amp; Kurti's. Crafted with love, delivered with care.</p>
           <div className={styles.socials}>
             <a href="#" className={styles.social}>f</a>
             <a href="#" className={styles.social}>in</a>
@@ -85,7 +85,7 @@ export default function Footer() {
           <ul>
             <li><Link to="/faqs">FAQs</Link></li>
             <li><Link to="/shipping-info">Shipping Info</Link></li>
-            <li><Link to="/returns-refunds">Returns & Refunds</Link></li>
+            <li><Link to="/returns-refunds">Returns &amp; Refunds</Link></li>
             <li><Link to="/size-guide">Size Guide</Link></li>
             <li><Link to="/track-order">Track Order</Link></li>
           </ul>
@@ -94,16 +94,35 @@ export default function Footer() {
         <div className={styles.col}>
           <h4>Contact</h4>
           <ul>
-            <li><a href="#">📍 Pune, Maharashtra</a></li>
-            <li><a href="tel:+919876543210">📞 +91 98765 43210</a></li>
-            <li><a href="mailto:hello@ayezu.com">✉️ hello@ayezu.com</a></li>
+            <li>
+              <a
+                href="https://maps.google.com/?q=B2-5+Plug+Play+Shed+Biada+Gate+Maranga+Purnea+Bihar"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                📍 B2-5, Plug&amp;Play Shed, Biada Gate No.-6,<br />
+                Maranga, Purnea – 854303, Bihar
+              </a>
+            </li>
+            <li><a href="tel:+919015682971">📞 Musharraf: +91 90156 82971</a></li>
+            <li><a href="tel:+918076537929">📞 Alok Kumar: +91 80765 37929</a></li>
+            <li><a href="mailto:neemroz42@gmail.com">✉️ neemroz42@gmail.com</a></li>
+            <li>
+              <a
+                href="https://wa.me/919015682971"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                💬 WhatsApp: +91 90156 82971
+              </a>
+            </li>
             <li><a href="#">⏰ Mon–Sat, 9am–6pm</a></li>
           </ul>
         </div>
       </div>
 
       <div className={styles.bottom}>
-        <span>© 2025 Ayezu Collection. All rights reserved.</span>
+        <span>© 2026 Ayezu Collection / Neemroz. All rights reserved.</span>
         <div className={styles.legal}>
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>

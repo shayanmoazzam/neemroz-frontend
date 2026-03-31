@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import styles from './WhatsAppButton.module.css'
 
-const PHONE = '917001065007'
+const PHONE = '919015682971'
 const DEFAULT_MSG = 'Hi! I found your store and I am interested in your products. Can you help me?'
 
 export default function WhatsAppButton() {
