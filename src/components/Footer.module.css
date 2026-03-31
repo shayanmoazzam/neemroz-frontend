@@ -79,6 +79,7 @@
   font-size: 1.8rem;
   font-weight: 600;
   color: var(--cream);
+  text-decoration: none;
 }
 .logo span { color: var(--accent); }
 .brand p {
@@ -100,6 +101,7 @@
   font-size: .72rem;
   font-weight: 700;
   color: var(--sand);
+  text-decoration: none;
   transition: background .2s;
   letter-spacing: 0;
 }
@@ -119,6 +121,7 @@
   color: var(--sand);
   font-size: .8rem;
   opacity: .65;
+  text-decoration: none;
   transition: opacity .2s;
 }
 .col ul li a:hover { opacity: 1; }
@@ -137,7 +140,10 @@
   margin: 0 auto;
 }
 .legal { display: flex; gap: 20px; }
-.legal a { color: var(--sand); }
+.legal a {
+  color: var(--sand);
+  text-decoration: none;
+}
 .legal a:hover { opacity: 1; }
 
 @media (max-width: 860px) {
