@@ -11,7 +11,7 @@
     left: 0;
     right: 0;
     width: 100%;                        /* ensures full width on all Android Chrome */
-    z-index: 999;
+    z-index: 1002;                      /* above CartSidebar overlay(1000) and panel(1001) */
     background: var(--white);
     border-top: 1px solid var(--sand);
     box-shadow: 0 -4px 20px rgba(61, 43, 31, 0.10);
