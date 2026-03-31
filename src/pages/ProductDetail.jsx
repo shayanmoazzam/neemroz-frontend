@@ -57,18 +57,28 @@ export default function ProductDetail() {
   const touchStartY = useRef(null)
 
   useEffect(() => {
+    // Reset immediately so stale related items from previous product never show
     setLoading(true)
     setActiveImg(0)
+    setRelated([])
+
+    const currentId = Number(id)
+
     api.get(`/products/${id}`)
       .then(r => {
         setProduct(r.data)
         setSize(r.data.sizes?.[0] || '')
         setColor(r.data.colors?.[0] || '')
+        // Fetch only same-category products
         return api.get(`/products?category=${r.data.category}`)
-      })
-      .then(r => {
-        const all = Array.isArray(r.data) ? r.data : []
-        setRelated(all.filter(p => p.id !== Number(id)).slice(0, 4))
+          .then(res => {
+            const all = Array.isArray(res.data) ? res.data : []
+            // Strict: same category only, exclude current product
+            const sameCategory = all
+              .filter(p => p.category === r.data.category && p.id !== currentId)
+              .slice(0, 4)
+            setRelated(sameCategory)
+          })
       })
       .catch(() => navigate('/shop'))
       .finally(() => setLoading(false))
