@@ -7,21 +7,36 @@ import styles from './StickyCart.module.css'
 export default function StickyCart({ product, selectedSize, selectedColor, qty }) {
   const { addToCart } = useCart()
   const navigate = useNavigate()
-  const [visible, setVisible] = useState(false)
+  const [actionsHidden, setActionsHidden] = useState(false)
+  const [footerVisible, setFooterVisible]  = useState(false)
   const [added, setAdded] = useState(false)
 
+  // Show bar when the "Add to Cart" buttons scroll out of view
   useEffect(() => {
     const anchor = document.getElementById('product-actions')
     if (!anchor) return
     const observer = new IntersectionObserver(
-      ([entry]) => setVisible(!entry.isIntersecting),
+      ([entry]) => setActionsHidden(!entry.isIntersecting),
       { threshold: 0 }
     )
     observer.observe(anchor)
     return () => observer.disconnect()
   }, [])
 
-  if (!visible) return null
+  // Hide bar when the footer scrolls into view
+  useEffect(() => {
+    const footer = document.querySelector('footer')
+    if (!footer) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setFooterVisible(entry.isIntersecting),
+      { threshold: 0 }
+    )
+    observer.observe(footer)
+    return () => observer.disconnect()
+  }, [])
+
+  // Only show when actions are scrolled past AND footer is not yet visible
+  if (!actionsHidden || footerVisible) return null
 
   const handleAdd = () => {
     addToCart(product.id, qty, selectedSize, selectedColor)
