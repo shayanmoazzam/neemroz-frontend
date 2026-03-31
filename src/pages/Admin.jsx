@@ -58,16 +58,18 @@ export default function Admin() {
   const loadData = () => {
     Promise.all([
       api.get('/products'),
-      api.get('/orders/all').catch(() => api.get('/orders'))
-    ]).then(([p, o]) => {
+      api.get('/orders/all').catch(() => api.get('/orders')),
+      api.get('/newsletter/subscribers').catch(() => ({ data: [] }))
+    ]).then(([p, o, s]) => {
       setProducts(Array.isArray(p.data) ? p.data : [])
       setOrders(Array.isArray(o.data) ? o.data : [])
+      setSubscribers(Array.isArray(s.data) ? s.data : [])
     }).finally(() => setLoading(false))
   }
 
   useEffect(() => { loadData() }, [])
 
-  // Load subscribers when tab is opened
+  // Reload subscribers if tab opened and still empty
   useEffect(() => {
     if (tab === 'subscribers' && subscribers.length === 0) {
       setSubLoading(true)
@@ -88,7 +90,6 @@ export default function Admin() {
     }
   }
 
-  // ── Image upload to Cloudinary via backend ──
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -112,11 +113,10 @@ export default function Admin() {
   const stats = [
     { icon: <Package size={22}/>,     label: 'Total Products',  value: products.length,      color: '#8B0000' },
     { icon: <ShoppingBag size={22}/>, label: 'Total Orders',    value: orders.length,        color: '#C4622D' },
-    { icon: <TrendingUp size={22}/>,  label: 'Revenue',         value: `₹${orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.totalAmount || o.total || 0), 0).toLocaleString('en-IN')}`, color: '#2d8a4e' },
+    { icon: <TrendingUp size={22}/>,  label: 'Revenue',         value: `\u20b9${orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + (o.totalAmount || o.total || 0), 0).toLocaleString('en-IN')}`, color: '#2d8a4e' },
     { icon: <Mail size={22}/>,        label: 'Subscribers',     value: subscribers.length,   color: '#6B21A8' },
   ]
 
-  // ── Product handlers ──
   const openAdd = () => { setForm(EMPTY_FORM); setEditId(null); setShowForm(true) }
   const openEdit = (p) => {
     setForm({ ...p, sizes: p.sizes?.join(', ') || '', colors: p.colors?.join(', ') || '', oldPrice: p.oldPrice || '' })
@@ -155,7 +155,6 @@ export default function Admin() {
     } catch { toast.error('Error deleting product') }
   }
 
-  // ── Order status update ──
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdatingStatus(orderId)
     try {
@@ -169,7 +168,6 @@ export default function Admin() {
     }
   }
 
-  // ── Filtered lists ──
   const filteredOrders = orders.filter(o => {
     const matchSearch =
       String(o.id).includes(orderSearch) ||
@@ -193,10 +191,8 @@ export default function Admin() {
   return (
     <div className={styles.page}>
 
-      {/* Mobile sidebar toggle */}
       <button className={styles.menuToggle} onClick={() => setSidebarOpen(o => !o)}>☰ Menu</button>
 
-      {/* Sidebar */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sidebarLogo}>⚙️ Admin Panel</div>
         <nav className={styles.sideNav}>
@@ -218,7 +214,6 @@ export default function Admin() {
         <button className={styles.sideBack} onClick={() => navigate('/')}>← Back to Site</button>
       </aside>
 
-      {/* Main */}
       <main className={styles.main}>
 
         {/* ── DASHBOARD ── */}
@@ -237,7 +232,6 @@ export default function Admin() {
               ))}
             </div>
 
-            {/* Status breakdown */}
             <div className={styles.statusBreakdown}>
               {ALL_STATUSES.map(st => {
                 const count = orders.filter(o => o.status === st).length
@@ -287,7 +281,9 @@ export default function Admin() {
                 <button className={styles.addBtn} onClick={openAdd}><Plus size={16} /> Add Product</button>
               </div>
             </div>
-            <div className={styles.tableWrap}>
+
+            {/* Desktop table */}
+            <div className={`${styles.tableWrap} ${styles.desktopOnly}`}>
               <table className={styles.table}>
                 <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Badge</th><th>Actions</th></tr></thead>
                 <tbody>
@@ -309,6 +305,30 @@ export default function Admin() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className={`${styles.productCards} ${styles.mobileOnly}`}>
+              {filteredProducts.length === 0 ? (
+                <div className={styles.empty}>No products found.</div>
+              ) : filteredProducts.map(p => (
+                <div key={p.id} className={styles.productCardItem}>
+                  <img src={p.imageUrl} alt={p.name} className={styles.productCardImg} />
+                  <div className={styles.productCardInfo}>
+                    <div className={styles.productCardName}>{p.name}</div>
+                    <div className={styles.productCardMeta}>
+                      <span className={styles.catTag}>{p.category}</span>
+                      <span>₹{p.price?.toLocaleString('en-IN')}</span>
+                      <span className={p.stock <= 5 ? styles.lowStock : styles.stockOk}>Stock: {p.stock}</span>
+                      {p.badge && <span className={styles.badgeTag}>{p.badge}</span>}
+                    </div>
+                  </div>
+                  <div className={styles.productCardActions}>
+                    <button className={styles.editBtn} onClick={() => openEdit(p)}><Pencil size={14} /></button>
+                    <button className={styles.deleteBtn} onClick={() => setDelConfirm(p.id)}><Trash2 size={14} /></button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
