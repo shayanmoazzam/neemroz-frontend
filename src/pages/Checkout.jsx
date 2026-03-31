@@ -128,8 +128,9 @@ export default function Checkout() {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}`
 
   // ── STORE OWNER WhatsApp alert (UPI payment verification) ──
-  const sendOwnerWhatsApp = (order) => {
-    const items = cartItems.map(i => `  • ${i.product.name} x${i.quantity} — ₹${(i.product.price * i.quantity).toLocaleString('en-IN')}`).join('\n')
+  // Uses itemsSnapshot so it works even after cart is cleared
+  const sendOwnerWhatsApp = (order, items) => {
+    const itemLines = items.map(i => `  • ${i.product.name} x${i.quantity} — ₹${(i.product.price * i.quantity).toLocaleString('en-IN')}`).join('\n')
     const msg = [
       `💸 *New UPI Payment — Ayezu Collection*`,
       ``,
@@ -139,7 +140,7 @@ export default function Checkout() {
       `📍 ${form.address}, ${form.city}, ${form.state} - ${form.pinCode}`,
       ``,
       `*Items:*`,
-      items,
+      itemLines,
       ``,
       `💰 Total Paid: ₹${finalTotal.toLocaleString('en-IN')}`,
       `💳 UPI ID: ${UPI_ID}`,
@@ -150,6 +151,7 @@ export default function Checkout() {
   }
 
   // ── CUSTOMER WhatsApp confirmation ──
+  // FIXED: uses `items` parameter (snapshot), NOT cartItems from context
   const sendCustomerWhatsApp = (order, items) => {
     const phone = form.phone.trim()
     if (!phone || phone.length < 10) return
@@ -184,13 +186,14 @@ export default function Checkout() {
   }
 
   // ── CUSTOMER SMS confirmation (native sms: deeplink — works on mobile) ──
-  const sendCustomerSMS = (order) => {
+  // FIXED: uses `items` parameter (snapshot), NOT cartItems from context
+  const sendCustomerSMS = (order, items) => {
     const phone = form.phone.trim()
     if (!phone || phone.length < 10) return
 
     const msg = [
       `Ayezu Collection: Order #${order.orderNumber || order.id} confirmed!`,
-      `Items: ${cartItems.map(i => `${i.product.name} x${i.quantity}`).join(', ')}`,
+      `Items: ${items.map(i => `${i.product.name} x${i.quantity}`).join(', ')}`,
       `Total: Rs.${finalTotal}`,
       `Payment: ${payMethod === 'COD' ? 'COD' : 'UPI'}`,
       `Delivery: ${form.address}, ${form.city} - ${form.pinCode}`,
@@ -229,7 +232,7 @@ export default function Checkout() {
 
   const submitOrder = async () => {
     setLoading(true)
-    // Snapshot cart items before clearing
+    // Snapshot cart items BEFORE clearCart() is called — used in all notifications
     const itemsSnapshot = [...cartItems]
     try {
       const orderRes = await api.post('/orders', {
@@ -244,16 +247,18 @@ export default function Checkout() {
         couponDiscount,
       })
       const order = orderRes.data
-      setPlacedOrder(order)
-      clearCart()
 
-      // Send all notifications
+      // Clear cart AFTER snapshot — order is confirmed
+      clearCart()
+      setPlacedOrder(order)
+
+      // Send all notifications — all use itemsSnapshot, NOT cartItems
       if (payMethod === 'UPI') {
-        sendOwnerWhatsApp(order)                      // alert store owner
+        sendOwnerWhatsApp(order, itemsSnapshot)       // alert store owner
       }
-      sendCustomerWhatsApp(order, itemsSnapshot)    // ← Customer WhatsApp
-      sendCustomerSMS(order)                         // ← Customer SMS (mobile deeplink)
-      notifyBackend(order)                           // ← Backend SMS/email (best-effort)
+      sendCustomerWhatsApp(order, itemsSnapshot)      // ← Customer WhatsApp ✅
+      sendCustomerSMS(order, itemsSnapshot)            // ← Customer SMS ✅
+      notifyBackend(order)                             // ← Backend email (best-effort)
 
       setShowUPI(false)
       setStep(2)
