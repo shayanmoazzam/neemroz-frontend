@@ -79,6 +79,18 @@ export default function Admin() {
 
   const [authChecked, setAuthChecked] = useState(false)
 
+  // ── FIX: Lock body scroll whenever any modal is open ──────────
+  const anyModalOpen = showForm || showCouponForm || !!delConfirm || !!delCouponConfirm
+  useEffect(() => {
+    if (anyModalOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [anyModalOpen])
+  // ──────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const timer = setTimeout(() => setAuthChecked(true), 0)
     return () => clearTimeout(timer)
@@ -141,10 +153,8 @@ export default function Admin() {
   }
 
   // ── MULTI-IMAGE HELPERS ──────────────────────────────────────
-  // Returns current images array (normalised from form state)
   const getImages = () => {
     const imgs = Array.isArray(form.images) ? [...form.images] : []
-    // Keep backward-compat: if imageUrl exists but not in array, prepend it
     if (form.imageUrl && !imgs.includes(form.imageUrl)) imgs.unshift(form.imageUrl)
     return imgs
   }
@@ -153,11 +163,10 @@ export default function Admin() {
     setForm(f => ({
       ...f,
       images: imgs,
-      imageUrl: imgs[0] || '',   // first image is always the primary
+      imageUrl: imgs[0] || '',
     }))
   }
 
-  // Upload a file and add to gallery
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
@@ -181,7 +190,6 @@ export default function Admin() {
     }
   }
 
-  // Add a URL manually
   const handleAddUrl = () => {
     const url = urlDraft.trim()
     if (!url) return
@@ -199,7 +207,6 @@ export default function Admin() {
     setImages(imgs)
   }
 
-  // Drag-to-reorder
   const handleDragStart = (idx) => { dragIndex.current = idx }
   const handleDrop = (idx) => {
     if (dragIndex.current === null || dragIndex.current === idx) return
@@ -220,7 +227,6 @@ export default function Admin() {
 
   const openAdd = () => { setForm(EMPTY_FORM); setUrlDraft(''); setEditId(null); setShowForm(true) }
   const openEdit = (p) => {
-    // Normalise images: use p.images array if it exists, else fall back to imageUrl
     const imgs = Array.isArray(p.images) && p.images.length
       ? p.images
       : (p.imageUrl ? [p.imageUrl] : [])
@@ -412,7 +418,6 @@ export default function Admin() {
 
   if (loading) return <div className={styles.loading}>Loading admin panel...</div>
 
-  // Computed images for the open form
   const formImages = getImages()
 
   return (
@@ -867,8 +872,6 @@ export default function Admin() {
                     Product Images *
                     <span className={styles.imgCountBadge}>{formImages.length} added · first = primary</span>
                   </label>
-
-                  {/* Upload + URL row */}
                   <div className={styles.imageUploadRow}>
                     <input
                       value={urlDraft}
@@ -902,7 +905,6 @@ export default function Admin() {
                     </button>
                   </div>
 
-                  {/* Gallery grid */}
                   {formImages.length > 0 && (
                     <div className={styles.imgGallery}>
                       {formImages.map((url, idx) => (
