@@ -11,7 +11,7 @@ import ProductCard from '../components/ProductCard'
 import StickyCart from '../components/StickyCart'
 import styles from './ProductDetail.module.css'
 
-const PHONE = '917001065007'
+const PHONE = '919015682971'
 
 const COLOR_NAMES = {
   '#8B0000': 'Dark Red', '#CC0000': 'Scarlet Red', '#FF4500': 'Orange Red',
