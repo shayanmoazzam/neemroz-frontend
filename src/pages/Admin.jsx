@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Package, ShoppingBag, Users, TrendingUp,
   Plus, Pencil, Trash2, X, Check, AlertTriangle,
-  ChevronDown, ChevronUp, Search, Upload, ImagePlus, Mail
+  ChevronDown, ChevronUp, Search, Upload, ImagePlus, Mail, Tag
 } from 'lucide-react'
 import api from '../api'
 import { useAuth } from '../context/AuthContext'
@@ -16,6 +16,19 @@ const EMPTY_FORM = {
   sizes: '', colors: '', stock: '', rating: '4.5', reviewCount: ''
 }
 
+const EMPTY_COUPON = {
+  code: '',
+  discountType: 'percentage',   // 'percentage' | 'flat'
+  discountValue: '',
+  minOrderAmount: '',
+  maxUses: '',
+  expiresAt: '',
+  applicability: 'all',         // 'all' | 'category' | 'products'
+  applicableCategories: [],     // ['bedsheet','kids','women']
+  applicableProductIds: [],     // [1, 2, 3, ...]
+  isActive: true,
+}
+
 const STATUS_COLORS = {
   pending:    { color: '#856404', bg: '#fff3cd' },
   processing: { color: '#0c63e4', bg: '#cfe2ff' },
@@ -25,6 +38,7 @@ const STATUS_COLORS = {
 }
 
 const ALL_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+const ALL_CATEGORIES = ['bedsheet', 'kids', 'women']
 
 export default function Admin() {
   const { user } = useAuth()
@@ -35,6 +49,7 @@ export default function Admin() {
   const [products, setProducts]     = useState([])
   const [orders, setOrders]         = useState([])
   const [subscribers, setSubscribers] = useState([])
+  const [coupons, setCoupons]       = useState([])
   const [subLoading, setSubLoading] = useState(false)
   const [subSearch, setSubSearch]   = useState('')
   const [loading, setLoading]       = useState(true)
@@ -51,6 +66,15 @@ export default function Admin() {
   const [updatingStatus, setUpdatingStatus] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Coupon state
+  const [couponForm, setCouponForm]       = useState(EMPTY_COUPON)
+  const [couponEditId, setCouponEditId]   = useState(null)
+  const [showCouponForm, setShowCouponForm] = useState(false)
+  const [couponSaving, setCouponSaving]   = useState(false)
+  const [couponSearch, setCouponSearch]   = useState('')
+  const [delCouponConfirm, setDelCouponConfirm] = useState(null)
+  const [productSearch, setProductSearch] = useState('')
+
   useEffect(() => {
     if (!user || user.role?.toUpperCase() !== 'ADMIN') navigate('/')
   }, [user])
@@ -59,11 +83,13 @@ export default function Admin() {
     Promise.all([
       api.get('/products'),
       api.get('/orders/all').catch(() => api.get('/orders')),
-      api.get('/newsletter/subscribers').catch(() => ({ data: [] }))
-    ]).then(([p, o, s]) => {
+      api.get('/newsletter/subscribers').catch(() => ({ data: [] })),
+      api.get('/coupons').catch(() => ({ data: [] })),
+    ]).then(([p, o, s, c]) => {
       setProducts(Array.isArray(p.data) ? p.data : [])
       setOrders(Array.isArray(o.data) ? o.data : [])
       setSubscribers(Array.isArray(s.data) ? s.data : [])
+      setCoupons(Array.isArray(c.data) ? c.data : [])
     }).finally(() => setLoading(false))
   }
 
@@ -77,6 +103,15 @@ export default function Admin() {
         .then(r => setSubscribers(Array.isArray(r.data) ? r.data : []))
         .catch(() => toast.error('Failed to load subscribers'))
         .finally(() => setSubLoading(false))
+    }
+  }, [tab])
+
+  // Reload coupons when tab opens
+  useEffect(() => {
+    if (tab === 'coupons') {
+      api.get('/coupons')
+        .then(r => setCoupons(Array.isArray(r.data) ? r.data : []))
+        .catch(() => {})
     }
   }, [tab])
 
@@ -168,6 +203,99 @@ export default function Admin() {
     }
   }
 
+  // ── COUPON HANDLERS ──
+  const openAddCoupon = () => { setCouponForm(EMPTY_COUPON); setCouponEditId(null); setShowCouponForm(true); setProductSearch('') }
+  const openEditCoupon = (c) => {
+    setCouponForm({
+      code: c.code || '',
+      discountType: c.discountType || 'percentage',
+      discountValue: c.discountValue || '',
+      minOrderAmount: c.minOrderAmount || '',
+      maxUses: c.maxUses || '',
+      expiresAt: c.expiresAt ? c.expiresAt.slice(0, 10) : '',
+      applicability: c.applicability || 'all',
+      applicableCategories: c.applicableCategories || [],
+      applicableProductIds: c.applicableProductIds || [],
+      isActive: c.isActive !== false,
+    })
+    setCouponEditId(c.id)
+    setShowCouponForm(true)
+    setProductSearch('')
+  }
+
+  const handleSaveCoupon = async () => {
+    if (!couponForm.code.trim() || !couponForm.discountValue) {
+      toast.error('Coupon code and discount value are required')
+      return
+    }
+    setCouponSaving(true)
+    const payload = {
+      ...couponForm,
+      code: couponForm.code.trim().toUpperCase(),
+      discountValue: Number(couponForm.discountValue),
+      minOrderAmount: couponForm.minOrderAmount ? Number(couponForm.minOrderAmount) : 0,
+      maxUses: couponForm.maxUses ? Number(couponForm.maxUses) : null,
+      expiresAt: couponForm.expiresAt || null,
+      applicableCategories: couponForm.applicability === 'category' ? couponForm.applicableCategories : [],
+      applicableProductIds: couponForm.applicability === 'products' ? couponForm.applicableProductIds : [],
+    }
+    try {
+      if (couponEditId) {
+        const res = await api.put(`/coupons/${couponEditId}`, payload)
+        setCoupons(prev => prev.map(c => c.id === couponEditId ? res.data : c))
+        toast.success('Coupon updated!')
+      } else {
+        const res = await api.post('/coupons', payload)
+        setCoupons(prev => [...prev, res.data])
+        toast.success('Coupon created!')
+      }
+      setShowCouponForm(false)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error saving coupon')
+    } finally {
+      setCouponSaving(false)
+    }
+  }
+
+  const handleDeleteCoupon = async (id) => {
+    try {
+      await api.delete(`/coupons/${id}`)
+      setCoupons(prev => prev.filter(c => c.id !== id))
+      setDelCouponConfirm(null)
+      toast.success('Coupon deleted')
+    } catch {
+      toast.error('Error deleting coupon')
+    }
+  }
+
+  const toggleCouponActive = async (c) => {
+    try {
+      const res = await api.patch(`/coupons/${c.id}/toggle`)
+      setCoupons(prev => prev.map(x => x.id === c.id ? { ...x, isActive: res.data?.isActive ?? !c.isActive } : x))
+      toast.success(c.isActive ? 'Coupon disabled' : 'Coupon enabled')
+    } catch {
+      toast.error('Failed to toggle coupon')
+    }
+  }
+
+  const toggleCategory = (cat) => {
+    setCouponForm(f => ({
+      ...f,
+      applicableCategories: f.applicableCategories.includes(cat)
+        ? f.applicableCategories.filter(c => c !== cat)
+        : [...f.applicableCategories, cat]
+    }))
+  }
+
+  const toggleProduct = (id) => {
+    setCouponForm(f => ({
+      ...f,
+      applicableProductIds: f.applicableProductIds.includes(id)
+        ? f.applicableProductIds.filter(p => p !== id)
+        : [...f.applicableProductIds, id]
+    }))
+  }
+
   const filteredOrders = orders.filter(o => {
     const matchSearch =
       String(o.id).includes(orderSearch) ||
@@ -186,6 +314,15 @@ export default function Admin() {
     s.email?.toLowerCase().includes(subSearch.toLowerCase())
   )
 
+  const filteredCoupons = coupons.filter(c =>
+    c.code?.toLowerCase().includes(couponSearch.toLowerCase())
+  )
+
+  const modalFilteredProducts = products.filter(p =>
+    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.category?.toLowerCase().includes(productSearch.toLowerCase())
+  )
+
   if (loading) return <div className={styles.loading}>Loading admin panel...</div>
 
   return (
@@ -197,10 +334,11 @@ export default function Admin() {
         <div className={styles.sidebarLogo}>⚙️ Admin Panel</div>
         <nav className={styles.sideNav}>
           {[
-            { key: 'dashboard',   label: '📊 Dashboard' },
-            { key: 'products',    label: '📦 Products' },
-            { key: 'orders',      label: '🛒 Orders' },
-            { key: 'subscribers', label: '📧 Subscribers' },
+            { key: 'dashboard',   label: '\ud83d\udcca Dashboard' },
+            { key: 'products',    label: '\ud83d\udce6 Products' },
+            { key: 'orders',      label: '\ud83d\uded2 Orders' },
+            { key: 'coupons',     label: '\ud83c\udff7\ufe0f Coupons' },
+            { key: 'subscribers', label: '\ud83d\udce7 Subscribers' },
           ].map(item => (
             <button
               key={item.key}
@@ -211,7 +349,7 @@ export default function Admin() {
             </button>
           ))}
         </nav>
-        <button className={styles.sideBack} onClick={() => navigate('/')}>← Back to Site</button>
+        <button className={styles.sideBack} onClick={() => navigate('/')}>\u2190 Back to Site</button>
       </aside>
 
       <main className={styles.main}>
@@ -257,9 +395,9 @@ export default function Admin() {
                     return (
                       <tr key={o.id}>
                         <td>#{o.id}</td>
-                        <td>{o.shippingName || `${o.firstName || ''} ${o.lastName || ''}`.trim() || '—'}</td>
+                        <td>{o.shippingName || `${o.firstName || ''} ${o.lastName || ''}`.trim() || '\u2014'}</td>
                         <td>{o.items?.length || 0} items</td>
-                        <td>₹{(o.totalAmount || o.total)?.toLocaleString('en-IN')}</td>
+                        <td>\u20b9{(o.totalAmount || o.total)?.toLocaleString('en-IN')}</td>
                         <td><span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>{o.status || 'pending'}</span></td>
                         <td>{new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
                       </tr>
@@ -292,9 +430,9 @@ export default function Admin() {
                       <td><img src={p.imageUrl} alt={p.name} className={styles.productThumb} /></td>
                       <td className={styles.productName}>{p.name}</td>
                       <td><span className={styles.catTag}>{p.category}</span></td>
-                      <td>₹{p.price?.toLocaleString('en-IN')}{p.oldPrice && <span className={styles.oldPriceTag}> ₹{p.oldPrice}</span>}</td>
+                      <td>\u20b9{p.price?.toLocaleString('en-IN')}{p.oldPrice && <span className={styles.oldPriceTag}> \u20b9{p.oldPrice}</span>}</td>
                       <td><span className={p.stock <= 5 ? styles.lowStock : styles.stockOk}>{p.stock}</span></td>
-                      <td>{p.badge ? <span className={styles.badgeTag}>{p.badge}</span> : '—'}</td>
+                      <td>{p.badge ? <span className={styles.badgeTag}>{p.badge}</span> : '\u2014'}</td>
                       <td>
                         <div className={styles.rowActions}>
                           <button className={styles.editBtn} onClick={() => openEdit(p)}><Pencil size={14} /></button>
@@ -318,7 +456,7 @@ export default function Admin() {
                     <div className={styles.productCardName}>{p.name}</div>
                     <div className={styles.productCardMeta}>
                       <span className={styles.catTag}>{p.category}</span>
-                      <span>₹{p.price?.toLocaleString('en-IN')}</span>
+                      <span>\u20b9{p.price?.toLocaleString('en-IN')}</span>
                       <span className={p.stock <= 5 ? styles.lowStock : styles.stockOk}>Stock: {p.stock}</span>
                       {p.badge && <span className={styles.badgeTag}>{p.badge}</span>}
                     </div>
@@ -377,15 +515,15 @@ export default function Admin() {
                         <div className={styles.orderCardLeft}>
                           <div className={styles.orderCardId}>Order #{o.id}</div>
                           <div className={styles.orderCardCustomer}>
-                            👤 {o.shippingName || `${o.firstName || ''} ${o.lastName || ''}`.trim() || 'Customer'}
+                            \ud83d\udc64 {o.shippingName || `${o.firstName || ''} ${o.lastName || ''}`.trim() || 'Customer'}
                           </div>
                           <div className={styles.orderCardMeta}>
-                            📞 {o.shippingPhone || o.phone || '—'} &nbsp;·&nbsp;
-                            📅 {new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            \ud83d\udcde {o.shippingPhone || o.phone || '\u2014'} &nbsp;\u00b7&nbsp;
+                            \ud83d\udcc5 {new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </div>
                         </div>
                         <div className={styles.orderCardRight}>
-                          <div className={styles.orderCardTotal}>₹{(o.totalAmount || o.total)?.toLocaleString('en-IN')}</div>
+                          <div className={styles.orderCardTotal}>\u20b9{(o.totalAmount || o.total)?.toLocaleString('en-IN')}</div>
                           <span className={styles.statusBadge} style={{ color: cfg.color, background: cfg.bg }}>
                             {o.status || 'pending'}
                           </span>
@@ -396,7 +534,7 @@ export default function Admin() {
                       {isExpanded && (
                         <div className={styles.orderCardBody}>
                           <div className={styles.orderItemsList}>
-                            <div className={styles.orderSectionLabel}>📦 Items Ordered</div>
+                            <div className={styles.orderSectionLabel}>\ud83d\udce6 Items Ordered</div>
                             {o.items?.map((item, i) => (
                               <div key={i} className={styles.orderItemRow}>
                                 <img
@@ -406,32 +544,32 @@ export default function Admin() {
                                 />
                                 <div className={styles.orderItemInfo}>
                                   <div className={styles.orderItemName}>{item.name || item.product?.name}</div>
-                                  <div className={styles.orderItemMeta}>Qty: {item.quantity} · ₹{item.price?.toLocaleString('en-IN')}</div>
+                                  <div className={styles.orderItemMeta}>Qty: {item.quantity} \u00b7 \u20b9{item.price?.toLocaleString('en-IN')}</div>
                                 </div>
                               </div>
                             ))}
                           </div>
 
                           <div className={styles.orderAddress}>
-                            <div className={styles.orderSectionLabel}>📍 Shipping Address</div>
+                            <div className={styles.orderSectionLabel}>\ud83d\udccd Shipping Address</div>
                             <div className={styles.orderAddressText}>
-                              {o.shippingAddress || o.address}, {o.shippingCity || o.city}, {o.shippingState || o.state} – {o.shippingPinCode || o.pinCode}
+                              {o.shippingAddress || o.address}, {o.shippingCity || o.city}, {o.shippingState || o.state} \u2013 {o.shippingPinCode || o.pinCode}
                             </div>
                           </div>
 
                           <div className={styles.orderMeta2}>
-                            <div><span className={styles.metaLabel}>Payment:</span> {o.paymentMethod || '—'}</div>
-                            {o.couponDiscount > 0 && <div><span className={styles.metaLabel}>Coupon Discount:</span> −₹{o.couponDiscount}</div>}
+                            <div><span className={styles.metaLabel}>Payment:</span> {o.paymentMethod || '\u2014'}</div>
+                            {o.couponDiscount > 0 && <div><span className={styles.metaLabel}>Coupon Discount:</span> \u2212\u20b9{o.couponDiscount}</div>}
                           </div>
 
                           {o.status === 'cancelled' && o.cancelReason && (
                             <div className={styles.cancelNote}>
-                              ❌ Cancelled by user: <em>{o.cancelReason}</em>
+                              \u274c Cancelled by user: <em>{o.cancelReason}</em>
                             </div>
                           )}
 
                           <div className={styles.statusChanger}>
-                            <div className={styles.orderSectionLabel}>🔄 Update Status</div>
+                            <div className={styles.orderSectionLabel}>\ud83d\udd04 Update Status</div>
                             <div className={styles.statusBtns}>
                               {ALL_STATUSES.map(s => (
                                 <button
@@ -456,11 +594,110 @@ export default function Admin() {
           </div>
         )}
 
+        {/* ── COUPONS ── */}
+        {tab === 'coupons' && (
+          <div>
+            <div className={styles.topBar}>
+              <h1 className={styles.pageTitle}>\ud83c\udff7\ufe0f Coupons ({filteredCoupons.length})</h1>
+              <div className={styles.topBarRight}>
+                <div className={styles.searchBox}>
+                  <Search size={15}/>
+                  <input
+                    className={styles.searchInput}
+                    placeholder="Search coupon code..."
+                    value={couponSearch}
+                    onChange={e => setCouponSearch(e.target.value)}
+                  />
+                </div>
+                <button className={styles.addBtn} onClick={openAddCoupon}>
+                  <Plus size={16} /> New Coupon
+                </button>
+              </div>
+            </div>
+
+            {filteredCoupons.length === 0 ? (
+              <div className={styles.empty}>
+                <Tag size={48} strokeWidth={1} style={{ marginBottom: 12, opacity: .4 }} />
+                <p>{couponSearch ? 'No coupons match your search.' : 'No coupons yet. Create one!'}</p>
+              </div>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Discount</th>
+                      <th>Applicable To</th>
+                      <th>Min Order</th>
+                      <th>Expires</th>
+                      <th>Uses</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCoupons.map(c => (
+                      <tr key={c.id}>
+                        <td>
+                          <span className={styles.couponCode}>{c.code}</span>
+                        </td>
+                        <td>
+                          {c.discountType === 'percentage'
+                            ? `${c.discountValue}% off`
+                            : `\u20b9${c.discountValue} off`}
+                        </td>
+                        <td>
+                          {c.applicability === 'all' && <span className={styles.catTag}>All Products</span>}
+                          {c.applicability === 'category' && (
+                            <span className={styles.catTag}>
+                              {(c.applicableCategories || []).join(', ') || 'No category'}
+                            </span>
+                          )}
+                          {c.applicability === 'products' && (
+                            <span className={styles.catTag}>
+                              {(c.applicableProductIds || []).length} product{(c.applicableProductIds || []).length !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </td>
+                        <td>{c.minOrderAmount > 0 ? `\u20b9${c.minOrderAmount}` : '\u2014'}</td>
+                        <td style={{ fontSize: '.82rem' }}>
+                          {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-IN') : '\u2014'}
+                        </td>
+                        <td style={{ fontSize: '.82rem' }}>
+                          {c.usedCount ?? 0}{c.maxUses ? ` / ${c.maxUses}` : ''}
+                        </td>
+                        <td>
+                          <button
+                            className={c.isActive ? styles.badgeTag : styles.catTag}
+                            style={c.isActive
+                              ? { cursor: 'pointer', background: '#d1fae5', color: '#065f46', border: 'none' }
+                              : { cursor: 'pointer', background: '#fee2e2', color: '#991b1b', border: 'none' }}
+                            onClick={() => toggleCouponActive(c)}
+                            title="Click to toggle"
+                          >
+                            {c.isActive ? '\u2705 Active' : '\u274c Disabled'}
+                          </button>
+                        </td>
+                        <td>
+                          <div className={styles.rowActions}>
+                            <button className={styles.editBtn} onClick={() => openEditCoupon(c)}><Pencil size={14} /></button>
+                            <button className={styles.deleteBtn} onClick={() => setDelCouponConfirm(c.id)}><Trash2 size={14} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── SUBSCRIBERS ── */}
         {tab === 'subscribers' && (
           <div>
             <div className={styles.topBar}>
-              <h1 className={styles.pageTitle}>📧 Subscribers ({filteredSubscribers.length})</h1>
+              <h1 className={styles.pageTitle}>\ud83d\udce7 Subscribers ({filteredSubscribers.length})</h1>
               <div className={styles.searchBox}>
                 <Search size={15}/>
                 <input
@@ -496,13 +733,13 @@ export default function Admin() {
                         <td style={{ color: 'var(--earth)', fontSize: '.8rem' }}>{i + 1}</td>
                         <td>
                           <a href={`mailto:${s.email}`} className={styles.emailLink}>
-                            📧 {s.email}
+                            \ud83d\udce7 {s.email}
                           </a>
                         </td>
                         <td style={{ fontSize: '.82rem', color: 'var(--earth)' }}>
                           {s.subscribedAt
                             ? new Date(s.subscribedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : '—'}
+                            : '\u2014'}
                         </td>
                         <td>
                           <button
@@ -524,7 +761,7 @@ export default function Admin() {
 
       </main>
 
-      {/* ── ADD/EDIT FORM MODAL ── */}
+      {/* ── ADD/EDIT PRODUCT FORM MODAL ── */}
       {showForm && (
         <div className={styles.modalOverlay} onClick={() => setShowForm(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
@@ -547,11 +784,11 @@ export default function Admin() {
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Price (₹) *</label>
+                  <label>Price (\u20b9) *</label>
                   <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="1299" />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Old Price (₹)</label>
+                  <label>Old Price (\u20b9)</label>
                   <input type="number" value={form.oldPrice} onChange={e => setForm(f => ({ ...f, oldPrice: e.target.value }))} placeholder="1699 (optional)" />
                 </div>
                 <div className={styles.formGroup}>
@@ -637,7 +874,238 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ── DELETE CONFIRM ── */}
+      {/* ── ADD/EDIT COUPON FORM MODAL ── */}
+      {showCouponForm && (
+        <div className={styles.modalOverlay} onClick={() => setShowCouponForm(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+            <div className={styles.modalHeader}>
+              <h2>{couponEditId ? '\u270f\ufe0f Edit Coupon' : '\ud83c\udff7\ufe0f New Coupon'}</h2>
+              <button className={styles.modalClose} onClick={() => setShowCouponForm(false)}><X size={20} /></button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.formGrid}>
+
+                {/* Code */}
+                <div className={styles.formGroup}>
+                  <label>Coupon Code *</label>
+                  <input
+                    value={couponForm.code}
+                    onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                    placeholder="e.g. NEEMROZ20"
+                    style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 1 }}
+                  />
+                </div>
+
+                {/* Active toggle */}
+                <div className={styles.formGroup} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                  <label>Status</label>
+                  <button
+                    type="button"
+                    onClick={() => setCouponForm(f => ({ ...f, isActive: !f.isActive }))}
+                    style={{
+                      padding: '8px 16px', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600,
+                      background: couponForm.isActive ? '#d1fae5' : '#fee2e2',
+                      color: couponForm.isActive ? '#065f46' : '#991b1b'
+                    }}
+                  >
+                    {couponForm.isActive ? '\u2705 Active' : '\u274c Disabled'}
+                  </button>
+                </div>
+
+                {/* Discount Type */}
+                <div className={styles.formGroup}>
+                  <label>Discount Type *</label>
+                  <select
+                    value={couponForm.discountType}
+                    onChange={e => setCouponForm(f => ({ ...f, discountType: e.target.value }))}
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="flat">Flat Amount (\u20b9)</option>
+                  </select>
+                </div>
+
+                {/* Discount Value */}
+                <div className={styles.formGroup}>
+                  <label>Discount Value * {couponForm.discountType === 'percentage' ? '(%)' : '(\u20b9)'}</label>
+                  <input
+                    type="number"
+                    value={couponForm.discountValue}
+                    onChange={e => setCouponForm(f => ({ ...f, discountValue: e.target.value }))}
+                    placeholder={couponForm.discountType === 'percentage' ? 'e.g. 20' : 'e.g. 150'}
+                    min="1"
+                    max={couponForm.discountType === 'percentage' ? 100 : undefined}
+                  />
+                </div>
+
+                {/* Min Order */}
+                <div className={styles.formGroup}>
+                  <label>Min Order Amount (\u20b9)</label>
+                  <input
+                    type="number"
+                    value={couponForm.minOrderAmount}
+                    onChange={e => setCouponForm(f => ({ ...f, minOrderAmount: e.target.value }))}
+                    placeholder="e.g. 500 (optional)"
+                  />
+                </div>
+
+                {/* Max Uses */}
+                <div className={styles.formGroup}>
+                  <label>Max Uses (optional)</label>
+                  <input
+                    type="number"
+                    value={couponForm.maxUses}
+                    onChange={e => setCouponForm(f => ({ ...f, maxUses: e.target.value }))}
+                    placeholder="e.g. 100 (leave blank = unlimited)"
+                  />
+                </div>
+
+                {/* Expiry */}
+                <div className={styles.formGroup}>
+                  <label>Expiry Date (optional)</label>
+                  <input
+                    type="date"
+                    value={couponForm.expiresAt}
+                    onChange={e => setCouponForm(f => ({ ...f, expiresAt: e.target.value }))}
+                  />
+                </div>
+
+                {/* Applicability */}
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label>\ud83c\udfaf Applicable To *</label>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
+                    {[
+                      { val: 'all',      label: '\ud83d\udce6 All Products' },
+                      { val: 'category', label: '\ud83c\udff7\ufe0f By Category' },
+                      { val: 'products', label: '\ud83d\udd0d Specific Products' },
+                    ].map(opt => (
+                      <button
+                        key={opt.val}
+                        type="button"
+                        onClick={() => setCouponForm(f => ({ ...f, applicability: opt.val }))}
+                        style={{
+                          padding: '7px 14px', borderRadius: 6, border: '2px solid',
+                          cursor: 'pointer', fontWeight: 600, fontSize: '.85rem',
+                          borderColor: couponForm.applicability === opt.val ? '#8B0000' : '#ddd',
+                          background: couponForm.applicability === opt.val ? '#fff0f0' : '#fff',
+                          color: couponForm.applicability === opt.val ? '#8B0000' : '#555',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category selector */}
+                {couponForm.applicability === 'category' && (
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                    <label>Select Categories</label>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+                      {ALL_CATEGORIES.map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => toggleCategory(cat)}
+                          style={{
+                            padding: '6px 14px', borderRadius: 20, border: '2px solid', cursor: 'pointer',
+                            fontWeight: 600, textTransform: 'capitalize', fontSize: '.85rem',
+                            borderColor: couponForm.applicableCategories.includes(cat) ? '#8B0000' : '#ddd',
+                            background: couponForm.applicableCategories.includes(cat) ? '#fff0f0' : '#f9f9f9',
+                            color: couponForm.applicableCategories.includes(cat) ? '#8B0000' : '#555',
+                          }}
+                        >
+                          {couponForm.applicableCategories.includes(cat) ? '\u2713 ' : ''}
+                          {cat === 'bedsheet' ? 'Bed Sheet' : cat === 'kids' ? 'Kids Wear' : 'Women Wear'}
+                        </button>
+                      ))}
+                    </div>
+                    {couponForm.applicableCategories.length === 0 && (
+                      <p style={{ fontSize: '.8rem', color: '#e53e3e', marginTop: 6 }}>Please select at least one category.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Product multi-selector */}
+                {couponForm.applicability === 'products' && (
+                  <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                    <label>
+                      Select Products
+                      <span style={{ fontWeight: 400, color: '#888', marginLeft: 8 }}>
+                        ({couponForm.applicableProductIds.length} selected)
+                      </span>
+                    </label>
+                    <div className={styles.searchBox} style={{ marginTop: 8, marginBottom: 8 }}>
+                      <Search size={13} />
+                      <input
+                        className={styles.searchInput}
+                        placeholder="Search products..."
+                        value={productSearch}
+                        onChange={e => setProductSearch(e.target.value)}
+                      />
+                    </div>
+                    <div style={{
+                      maxHeight: 260, overflowY: 'auto', border: '1px solid #e5e7eb',
+                      borderRadius: 8, background: '#fafafa'
+                    }}>
+                      {modalFilteredProducts.length === 0 ? (
+                        <div style={{ padding: 16, color: '#888', textAlign: 'center' }}>No products found</div>
+                      ) : modalFilteredProducts.map(p => {
+                        const selected = couponForm.applicableProductIds.includes(p.id)
+                        return (
+                          <div
+                            key={p.id}
+                            onClick={() => toggleProduct(p.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 10,
+                              padding: '9px 12px', cursor: 'pointer',
+                              borderBottom: '1px solid #f0f0f0',
+                              background: selected ? '#fff0f0' : 'transparent',
+                              transition: 'background .15s',
+                            }}
+                          >
+                            <div style={{
+                              width: 18, height: 18, borderRadius: 4, border: '2px solid',
+                              borderColor: selected ? '#8B0000' : '#ccc',
+                              background: selected ? '#8B0000' : '#fff',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              {selected && <Check size={11} color="#fff" />}
+                            </div>
+                            <img
+                              src={p.imageUrl}
+                              alt={p.name}
+                              style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, fontSize: '.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                              <div style={{ fontSize: '.78rem', color: '#888', textTransform: 'capitalize' }}>
+                                {p.category} \u00b7 \u20b9{p.price?.toLocaleString('en-IN')}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {couponForm.applicableProductIds.length === 0 && (
+                      <p style={{ fontSize: '.8rem', color: '#e53e3e', marginTop: 6 }}>Please select at least one product.</p>
+                    )}
+                  </div>
+                )}
+
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.cancelBtn} onClick={() => setShowCouponForm(false)}>Cancel</button>
+              <button className={styles.saveBtn} onClick={handleSaveCoupon} disabled={couponSaving}>
+                {couponSaving ? 'Saving...' : <><Check size={16} /> {couponEditId ? 'Update Coupon' : 'Create Coupon'}</> }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DELETE PRODUCT CONFIRM ── */}
       {delConfirm && (
         <div className={styles.modalOverlay} onClick={() => setDelConfirm(null)}>
           <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
@@ -647,6 +1115,21 @@ export default function Admin() {
             <div className={styles.confirmBtns}>
               <button className={styles.cancelBtn} onClick={() => setDelConfirm(null)}>Cancel</button>
               <button className={styles.deleteBtnRed} onClick={() => handleDelete(delConfirm)}><Trash2 size={15} /> Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DELETE COUPON CONFIRM ── */}
+      {delCouponConfirm && (
+        <div className={styles.modalOverlay} onClick={() => setDelCouponConfirm(null)}>
+          <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
+            <AlertTriangle size={40} color="#e53e3e" />
+            <h3>Delete Coupon?</h3>
+            <p>This action cannot be undone.</p>
+            <div className={styles.confirmBtns}>
+              <button className={styles.cancelBtn} onClick={() => setDelCouponConfirm(null)}>Cancel</button>
+              <button className={styles.deleteBtnRed} onClick={() => handleDeleteCoupon(delCouponConfirm)}><Trash2 size={15} /> Delete</button>
             </div>
           </div>
         </div>
