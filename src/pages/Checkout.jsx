@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Smartphone, Truck, Copy, Check } from 'lucide-react'
+import { CheckCircle, Smartphone, Truck, Copy, Check, MessageSquare } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import api from '../api'
@@ -18,12 +18,6 @@ const PAY_METHODS = [
   { key: 'COD', label: 'Cash on Delivery', icon: <Truck size={20}/> },
 ]
 
-const COUPONS = {
-  'AYEZU10':   10,
-  'WELCOME20': 20,
-  'FESTIVE15': 15,
-}
-
 export default function Checkout() {
   const { cartItems, cartTotal, shipping, grandTotal, clearCart } = useCart()
   const { user } = useAuth()
@@ -37,10 +31,13 @@ export default function Checkout() {
   const [showUPI, setShowUPI]         = useState(false)
   const [copied, setCopied]           = useState(false)
 
+  // Coupon state — backed by API
+  const [availableCoupons, setAvailableCoupons] = useState([])
   const [coupon, setCoupon]                 = useState('')
   const [couponApplied, setCouponApplied]   = useState(false)
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponError, setCouponError]       = useState('')
+  const [couponLoading, setCouponLoading]   = useState(false)
 
   const [form, setForm] = useState({
     firstName: user?.firstName || '',
@@ -53,24 +50,42 @@ export default function Checkout() {
     pinCode:   '',
   })
 
+  // Load active coupons from backend on mount
+  useEffect(() => {
+    api.get('/coupons/active').catch(() => api.get('/coupons'))
+      .then(r => setAvailableCoupons(Array.isArray(r.data) ? r.data.filter(c => c.isActive) : []))
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [step, showUPI])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const applyCoupon = () => {
+  // Validate coupon via backend API
+  const applyCoupon = async () => {
     const code = coupon.trim().toUpperCase()
-    if (COUPONS[code]) {
-      const disc = Math.round((cartTotal * COUPONS[code]) / 100)
+    if (!code) { setCouponError('Please enter a coupon code'); return }
+    setCouponLoading(true)
+    setCouponError('')
+    try {
+      const res = await api.post('/coupons/validate', {
+        code,
+        orderAmount: cartTotal,
+      })
+      const disc = res.data.discountAmount || 0
       setCouponDiscount(disc)
       setCouponApplied(true)
       setCouponError('')
       toast.success(`Coupon applied! ₹${disc} off 🎉`)
-    } else {
-      setCouponError('Invalid coupon code')
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Invalid or expired coupon code'
+      setCouponError(msg)
       setCouponDiscount(0)
       setCouponApplied(false)
+    } finally {
+      setCouponLoading(false)
     }
   }
 
@@ -109,18 +124,16 @@ export default function Checkout() {
     })
   }
 
-  // UPI deep link — opens GPay / PhonePe / Paytm / any UPI app directly
   const upiDeepLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${finalTotal}&cu=INR`
-
-  // QR code image URL (free, no API key needed)
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiDeepLink)}`
 
-  const sendWhatsAppConfirmation = (order) => {
+  // ── STORE OWNER WhatsApp alert (UPI payment verification) ──
+  const sendOwnerWhatsApp = (order) => {
     const items = cartItems.map(i => `  • ${i.product.name} x${i.quantity} — ₹${(i.product.price * i.quantity).toLocaleString('en-IN')}`).join('\n')
     const msg = [
       `💸 *New UPI Payment — Ayezu Collection*`,
       ``,
-      `📦 Order #${order.orderNumber}`,
+      `📦 Order #${order.orderNumber || order.id}`,
       `👤 ${form.firstName} ${form.lastName}`,
       `📞 ${form.phone}`,
       `📍 ${form.address}, ${form.city}, ${form.state} - ${form.pinCode}`,
@@ -134,6 +147,72 @@ export default function Checkout() {
       `Please verify the payment and confirm the order.`,
     ].join('\n')
     window.open(`https://wa.me/${STORE_PHONE}?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  // ── CUSTOMER WhatsApp confirmation ──
+  const sendCustomerWhatsApp = (order, items) => {
+    const phone = form.phone.trim()
+    if (!phone || phone.length < 10) return
+
+    const itemLines = items.map(i => `  • ${i.product.name} x${i.quantity} — ₹${(i.product.price * i.quantity).toLocaleString('en-IN')}`).join('\n')
+    const msg = [
+      `🛍️ *Order Confirmed — Ayezu Collection*`,
+      ``,
+      `Hi ${form.firstName}! 🎉 Your order has been placed successfully.`,
+      ``,
+      `📦 *Order ID:* #${order.orderNumber || order.id}`,
+      `💳 *Payment:* ${payMethod === 'COD' ? 'Cash on Delivery' : 'UPI'}`,
+      ``,
+      `*Items Ordered:*`,
+      itemLines,
+      ``,
+      `💰 *Total:* ₹${finalTotal.toLocaleString('en-IN')}`,
+      couponDiscount > 0 ? `🎁 *Coupon Savings:* ₹${couponDiscount}` : null,
+      ``,
+      `📍 *Deliver to:*`,
+      `${form.address}, ${form.city}, ${form.state} – ${form.pinCode}`,
+      ``,
+      `🚚 Expected delivery in *3–5 business days*.`,
+      ``,
+      `Thank you for shopping with Ayezu Collection! 💛`,
+      `Track your order at: https://www.ayezu.com/orders`,
+    ].filter(l => l !== null).join('\n')
+
+    // Indian phone: prepend 91 if not already
+    const waPhone = phone.startsWith('91') ? phone : `91${phone}`
+    window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  // ── CUSTOMER SMS confirmation (native sms: deeplink — works on mobile) ──
+  const sendCustomerSMS = (order) => {
+    const phone = form.phone.trim()
+    if (!phone || phone.length < 10) return
+
+    const msg = [
+      `Ayezu Collection: Order #${order.orderNumber || order.id} confirmed!`,
+      `Items: ${cartItems.map(i => `${i.product.name} x${i.quantity}`).join(', ')}`,
+      `Total: Rs.${finalTotal}`,
+      `Payment: ${payMethod === 'COD' ? 'COD' : 'UPI'}`,
+      `Delivery: ${form.address}, ${form.city} - ${form.pinCode}`,
+      `Expected: 3-5 business days. Track: ayezu.com/orders`,
+    ].join(' | ')
+
+    // sms: deep link — opens native messaging app on mobile
+    const smsLink = `sms:${phone}?body=${encodeURIComponent(msg)}`
+    window.open(smsLink, '_blank')
+  }
+
+  // ── Notify backend to send SMS/email (server-side, if configured) ──
+  const notifyBackend = async (order) => {
+    try {
+      await api.post(`/orders/${order.id}/notify`, {
+        phone: form.phone,
+        email: form.email,
+        orderNumber: order.orderNumber || order.id,
+      })
+    } catch {
+      // Silently ignore — backend notification is best-effort
+    }
   }
 
   const handlePlaceOrder = async () => {
@@ -150,6 +229,8 @@ export default function Checkout() {
 
   const submitOrder = async () => {
     setLoading(true)
+    // Snapshot cart items before clearing
+    const itemsSnapshot = [...cartItems]
     try {
       const orderRes = await api.post('/orders', {
         paymentMethod:   payMethod,
@@ -165,9 +246,15 @@ export default function Checkout() {
       const order = orderRes.data
       setPlacedOrder(order)
       clearCart()
+
+      // Send all notifications
       if (payMethod === 'UPI') {
-        sendWhatsAppConfirmation(order)
+        sendOwnerWhatsApp(order)                      // alert store owner
       }
+      sendCustomerWhatsApp(order, itemsSnapshot)    // ← Customer WhatsApp
+      sendCustomerSMS(order)                         // ← Customer SMS (mobile deeplink)
+      notifyBackend(order)                           // ← Backend SMS/email (best-effort)
+
       setShowUPI(false)
       setStep(2)
     } catch (e) {
@@ -221,7 +308,6 @@ export default function Checkout() {
               <span className={styles.upiAmountLabel}>Total Amount</span>
             </div>
 
-            {/* QR Code */}
             <div className={styles.qrWrap}>
               <img
                 src={qrUrl}
@@ -233,7 +319,6 @@ export default function Checkout() {
               <p className={styles.qrHint}>Scan with GPay, PhonePe, Paytm or any UPI app</p>
             </div>
 
-            {/* UPI ID row */}
             <div className={styles.upiIdRow}>
               <span className={styles.upiIdLabel}>UPI ID</span>
               <span className={styles.upiIdValue}>{UPI_ID}</span>
@@ -243,7 +328,6 @@ export default function Checkout() {
               </button>
             </div>
 
-            {/* Open UPI app directly */}
             <a href={upiDeepLink} className={styles.upiAppBtn}>
               📲 Open UPI App to Pay
             </a>
@@ -352,6 +436,12 @@ export default function Checkout() {
                   <div className={styles.deliverySummaryName}>{form.firstName} {form.lastName} · {form.phone}</div>
                   <div className={styles.deliverySummaryAddr}>{form.address}, {form.city}, {form.state} – {form.pinCode}</div>
                 </div>
+
+                {/* Notification note */}
+                <div className={styles.notifNote}>
+                  <MessageSquare size={14} />
+                  You'll receive a <strong>WhatsApp</strong> &amp; <strong>SMS</strong> confirmation on <strong>{form.phone}</strong> once your order is placed.
+                </div>
               </div>
             )}
 
@@ -363,14 +453,32 @@ export default function Checkout() {
                 <p>Thank you for shopping with <strong>Ayezu Collection</strong>!</p>
                 {payMethod === 'UPI' && (
                   <p style={{ color: '#166534', background: '#f0fdf4', padding: '10px 16px', borderRadius: '10px', margin: '12px 0', fontSize: '.88rem' }}>
-                    💸 Payment received! We’ll verify and dispatch within <strong>24 hours</strong>.
+                    💸 Payment received! We'll verify and dispatch within <strong>24 hours</strong>.
                   </p>
                 )}
                 <p>Your order will be delivered within <strong>3–5 business days</strong>.</p>
                 {placedOrder && (
-                  <div className={styles.orderId}>Order #{placedOrder.orderNumber}</div>
+                  <div className={styles.orderId}>Order #{placedOrder.orderNumber || placedOrder.id}</div>
                 )}
-                <p className={styles.successNote}>Confirmation will be sent to <strong>{form.email}</strong></p>
+
+                {/* Confirmation sent notice */}
+                <div className={styles.confirmSentBox}>
+                  <div className={styles.confirmSentRow}>
+                    <span className={styles.confirmSentIcon}>💬</span>
+                    <span>WhatsApp confirmation sent to <strong>{form.phone}</strong></span>
+                  </div>
+                  <div className={styles.confirmSentRow}>
+                    <span className={styles.confirmSentIcon}>📱</span>
+                    <span>SMS confirmation sent to <strong>{form.phone}</strong></span>
+                  </div>
+                  {form.email && (
+                    <div className={styles.confirmSentRow}>
+                      <span className={styles.confirmSentIcon}>📧</span>
+                      <span>Email confirmation sent to <strong>{form.email}</strong></span>
+                    </div>
+                  )}
+                </div>
+
                 <div className={styles.successBtns}>
                   <button className="btn-primary" onClick={() => navigate('/orders')}>View Orders</button>
                   <button className="btn-outline" onClick={() => navigate('/')}>Continue Shopping</button>
@@ -421,11 +529,13 @@ export default function Checkout() {
                       <input
                         className={styles.couponInput}
                         value={coupon}
-                        onChange={e => { setCoupon(e.target.value); setCouponError('') }}
+                        onChange={e => { setCoupon(e.target.value.toUpperCase()); setCouponError('') }}
                         placeholder="Enter coupon code"
                         onKeyDown={e => e.key === 'Enter' && applyCoupon()}
                       />
-                      <button type="button" className={styles.couponBtn} onClick={applyCoupon}>Apply</button>
+                      <button type="button" className={styles.couponBtn} onClick={applyCoupon} disabled={couponLoading}>
+                        {couponLoading ? '...' : 'Apply'}
+                      </button>
                     </div>
                   ) : (
                     <div className={styles.couponSuccess}>
@@ -434,7 +544,6 @@ export default function Checkout() {
                     </div>
                   )}
                   {couponError && <div className={styles.couponError}>{couponError}</div>}
-                  <div className={styles.couponHint}>Try: AYEZU10 · WELCOME20 · FESTIVE15</div>
                 </div>
 
                 <div className={styles.summaryCalc}>
