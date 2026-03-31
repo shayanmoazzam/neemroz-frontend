@@ -75,9 +75,30 @@ export default function Admin() {
   const [delCouponConfirm, setDelCouponConfirm] = useState(null)
   const [productSearch, setProductSearch] = useState('')
 
+  // --- FIX: Guard against null user during initial hydration ---
+  // Wait a tick so AuthContext can restore user from sessionStorage.
+  // Only redirect once we're sure user is resolved (not null due to loading).
+  const [authChecked, setAuthChecked] = useState(false)
+
   useEffect(() => {
-    if (!user || user.role?.toUpperCase() !== 'ADMIN') navigate('/')
-  }, [user])
+    // Give AuthContext one render cycle to hydrate user from sessionStorage
+    const timer = setTimeout(() => setAuthChecked(true), 0)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!authChecked) return
+    if (!user) {
+      // Not logged in — send to login with redirect back to /admin
+      navigate('/login?redirect=/admin', { replace: true })
+      return
+    }
+    if (user.role?.toUpperCase() !== 'ADMIN') {
+      // Logged in but not admin — send home with a message
+      toast.error('Access denied. Admin only.')
+      navigate('/', { replace: true })
+    }
+  }, [user, authChecked])
 
   const loadData = () => {
     Promise.all([
